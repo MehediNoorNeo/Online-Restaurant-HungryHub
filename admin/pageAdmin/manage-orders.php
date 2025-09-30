@@ -35,13 +35,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $order_id]);
-            $message = 'Order status updated successfully!';
-            $message_type = 'success';
+            
+            // Redirect to prevent form resubmission on page refresh
+            $redirect_url = 'manage-orders.php?updated=1&order_id=' . urlencode($order_id);
+            
+            // Preserve current filters if they exist
+            if (isset($_GET['status']) && $_GET['status'] !== 'all') {
+                $redirect_url .= '&status=' . urlencode($_GET['status']);
+            }
+            if (isset($_GET['search']) && !empty($_GET['search'])) {
+                $redirect_url .= '&search=' . urlencode($_GET['search']);
+            }
+            
+            header('Location: ' . $redirect_url);
+            exit();
         } catch(PDOException $e) {
             $message = 'Error updating order status: ' . $e->getMessage();
             $message_type = 'error';
         }
     }
+}
+
+// Handle success message from redirect
+if (isset($_GET['updated']) && $_GET['updated'] == '1') {
+    $message = 'Order status updated successfully!';
+    $message_type = 'success';
 }
 
 // Get filter parameters
