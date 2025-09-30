@@ -1,0 +1,67 @@
+/* Order Details - Admin */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+.details-container { 
+    padding: 2rem 3rem; 
+}
+
+.back-link {
+    text-decoration: none;
+    color: #2980b9;
+    font-weight: 700;
+}
+
+.details-card {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.order-title {
+    margin: 0;
+}
+
+.muted { color: #666; }
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.section-title {
+    margin: 0 0 .5rem 0;
+}
+
+.contact-line { margin-top: .25rem; }
+.address-line { margin-top: .5rem; }
+
+.totals { margin-top: .75rem; }
+.total-row { display: flex; justify-content: space-between; padding: .2rem 0; }
+.total-row.grand { font-weight: 700; font-size: 1.05rem; }
+.divider { margin: .5rem 0; border: 0; border-top: 1px solid #eef2f7; }
+
+.items-list { margin-top: 1rem; }
+.items-ul { list-style: none; padding: 0; margin: 0; }
+.items-ul li { display: flex; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid #f0f2f5; }
+.item-name { font-weight: 600; }
+.item-right { text-align: right; }
+
+@media (max-width: 768px) {
+  .details-container { padding: 1rem; }
+  .details-grid { grid-template-columns: 1fr; }
+  .details-card { padding: 1.2rem; }
+}

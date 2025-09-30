@@ -1,0 +1,269 @@
+/* Food Detail Page Styles */
+.food-detail-container {
+    min-height: 100vh;
+    background: #f8f9fa;
+    padding: 2rem 0;
+}
+
+.food-detail-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.food-image-section {
+    position: relative;
+    height: 450px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border: 3px solid white;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.food-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.food-info {
+    padding: 2rem;
+}
+
+.food-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.food-category {
+    background: rgb(251, 87, 27);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+span.card-currency-symbol {
+    font-size: 2rem;
+    margin-right: 0.2rem;
+    font-weight: 1000;
+    color: #FF6B35 !important;
+    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.food-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #FF6B35;
+    margin-bottom: 1.5rem;
+}
+
+.rating-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.rating-stars {
+    color: #ffc107;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.rating-text {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.food-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #495057;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.reviews-section {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.review-form {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+.review-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.review-user {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.review-date {
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.review-rating {
+    color: #ffc107;
+    margin-bottom: 0.5rem;
+}
+
+.review-text {
+    color: #495057;
+    line-height: 1.5;
+}
+
+.star-rating {
+    display: flex;
+    gap: 0.2rem;
+    margin-bottom: 1rem;
+}
+
+.star {
+    font-size: 1.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star:hover,
+.star.active {
+    color: #ffc107;
+}
+
+.btn-add-to-cart {
+    background: linear-gradient(135deg, #FF6B35 0%, rgb(224, 107, 65) 100%);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-add-to-cart:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+/* Simple Quantity Controls Styles */
+.card-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-quantity-controls .btn {
+    width: 37px;
+    height: 37px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    border: 2px solid #dee2e6;
+}
+
+.card-quantity-controls .btn-outline-secondary {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border-color: #d32f2f;
+}
+
+.card-quantity-controls .btn-outline-secondary:hover {
+    background-color: #d32f2f;
+    color: white;
+    border-color: #d32f2f;
+}
+
+.card-quantity-controls .btn-outline-primary {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+    border-color: #2e7d32;
+}
+
+.card-quantity-controls .btn-outline-primary:hover {
+    background-color: #2e7d32;
+    color: white;
+    border-color: #2e7d32;
+}
+
+.card-quantity-controls .btn:hover {
+    transform: scale(1.1);
+}
+
+.card-quantity-controls .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.card-quantity-display {
+    height: 37px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: white;
+    min-width: 30px;
+    background-color: #FF6B35;
+    border: 2px solid #FF6B35;
+    border-radius: 8px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+}
+
+/* Responsive quantity controls */
+@media (max-width: 768px) {
+    .card-quantity-controls {
+        gap: 0.5rem;
+    }
+    
+    .card-quantity-controls .btn {
+        width: 36px;
+        height: 36px;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+    
+    .card-quantity-display {
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+}
