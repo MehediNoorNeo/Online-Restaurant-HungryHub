@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -32,7 +32,7 @@ try {
     $stmt = $pdo->prepare("SELECT * FROM orders WHERE order_id = ?");
     $stmt->execute([$orderPublicId]);
     $order = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $order = null;
 }
 
@@ -64,14 +64,16 @@ try {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order Details - <?php echo htmlspecialchars($orderPublicId); ?></title>
     <link rel="stylesheet" href="../cssAdmin/manage-orders.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../cssAdmin/order-details.css?v=<?php echo time(); ?>">
-    
+
 </head>
+
 <body>
     <div class="header">
         <h1>Order Details</h1>
@@ -105,14 +107,14 @@ try {
                     <div class="muted"><?php echo htmlspecialchars($order['customer_email'] ?? ''); ?> · <?php echo htmlspecialchars($order['customer_phone'] ?? ''); ?></div>
                     <div class="muted" style="margin-top:.5rem;">
                         <?php
-                            $addrParts = array_filter([
-                                $order['delivery_address1'] ?? null,
-                                $order['delivery_address2'] ?? null,
-                                $order['delivery_road'] ? ('Road: ' . $order['delivery_road']) : null,
-                                $order['delivery_street'] ? ('Street: ' . $order['delivery_street']) : null,
-                                $order['delivery_area'] ? ('Area: ' . $order['delivery_area']) : null,
-                            ]);
-                            echo htmlspecialchars(implode(', ', $addrParts));
+                        $addrParts = array_filter([
+                            $order['delivery_address1'] ?? null,
+                            $order['delivery_address2'] ?? null,
+                            $order['delivery_road'] ? ('Road: ' . $order['delivery_road']) : null,
+                            $order['delivery_street'] ? ('Street: ' . $order['delivery_street']) : null,
+                            $order['delivery_area'] ? ('Area: ' . $order['delivery_area']) : null,
+                        ]);
+                        echo htmlspecialchars(implode(', ', $addrParts));
                         ?>
                     </div>
                     <div class="items-list">
@@ -120,39 +122,41 @@ try {
                         <?php if (empty($items)): ?>
                             <div class="muted">No items found for this order.</div>
                         <?php else: ?>
-                        <ul style="list-style:none; padding:0; margin:0;">
-                            <?php foreach ($items as $it): ?>
-                            <li style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid #f0f2f5;">
-                                <div style="display:flex; align-items:center; gap:.75rem;">
-                                    <?php
-                                        $lookupName = strtolower(trim($it['item_name'] ?? ''));
-                                        $imgRel = $food_image_map[$lookupName] ?? '';
-                                        $imgSrc = '';
-                                        if (!empty($imgRel)) {
-                                            if (strpos($imgRel, 'http') === 0 || strpos($imgRel, 'data:') === 0) {
-                                                $imgSrc = $imgRel;
-                                            } else {
-            									$webPath = '../../' . ltrim($imgRel, '/');
-                                                $fsPath = realpath(__DIR__ . '/../../' . ltrim($imgRel, '/'));
-                                                if ($fsPath && file_exists($fsPath)) { $imgSrc = $webPath; }
+                            <ul style="list-style:none; padding:0; margin:0;">
+                                <?php foreach ($items as $it): ?>
+                                    <li style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid #f0f2f5;">
+                                        <div style="display:flex; align-items:center; gap:.75rem;">
+                                            <?php
+                                            $lookupName = strtolower(trim($it['item_name'] ?? ''));
+                                            $imgRel = $food_image_map[$lookupName] ?? '';
+                                            $imgSrc = '';
+                                            if (!empty($imgRel)) {
+                                                if (strpos($imgRel, 'http') === 0 || strpos($imgRel, 'data:') === 0) {
+                                                    $imgSrc = $imgRel;
+                                                } else {
+                                                    $webPath = '../../' . ltrim($imgRel, '/');
+                                                    $fsPath = realpath(__DIR__ . '/../../' . ltrim($imgRel, '/'));
+                                                    if ($fsPath && file_exists($fsPath)) {
+                                                        $imgSrc = $webPath;
+                                                    }
+                                                }
                                             }
-                                        }
-                                    ?>
-                                    <?php if (!empty($imgSrc)): ?>
-                                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($it['item_name'] ?? ''); ?>" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
-                                    <?php endif; ?>
-                                    <div>
-                                        <div style="font-weight:600;">&nbsp;<?php echo htmlspecialchars($it['item_name'] ?? ''); ?></div>
-                                        <div class="muted small"><?php echo htmlspecialchars($it['category'] ?? ''); ?></div>
-                                    </div>
-                                </div>
-                                <div style="text-align:right;min-width:110px;">
-                                    <div>x<?php echo (int)($it['quantity'] ?? 0); ?></div>
-                                    <div class="muted">৳<?php echo number_format((float)($it['total_price'] ?? 0), 2); ?></div>
-                                </div>
-                            </li>
-                            <?php endforeach; ?>
-                        </ul>
+                                            ?>
+                                            <?php if (!empty($imgSrc)): ?>
+                                                <img src="<?php echo htmlspecialchars($imgSrc); ?>" alt="<?php echo htmlspecialchars($it['item_name'] ?? ''); ?>" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
+                                            <?php endif; ?>
+                                            <div>
+                                                <div style="font-weight:600;">&nbsp;<?php echo htmlspecialchars($it['item_name'] ?? ''); ?></div>
+                                                <div class="muted small"><?php echo htmlspecialchars($it['category'] ?? ''); ?></div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align:right;min-width:110px;">
+                                            <div>x<?php echo (int)($it['quantity'] ?? 0); ?></div>
+                                            <div class="muted">৳<?php echo number_format((float)($it['total_price'] ?? 0), 2); ?></div>
+                                        </div>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -165,7 +169,7 @@ try {
                         <div class="d-flex justify-content-between"><span class="muted">Tax: </span><span>৳<?php echo number_format((float)($order['tax_amount'] ?? 0), 2); ?></span></div>
                         <div class="d-flex justify-content-between"><span class="muted">Delivery: </span><span>৳<?php echo number_format((float)($order['delivery_fee'] ?? 0), 2); ?></span></div>
                         <?php if (!empty($order['coupon_code'])): ?>
-                        <div class="d-flex justify-content-between"><span class="muted">Coupon (<?php echo htmlspecialchars($order['coupon_code']); ?>): </span><span>-৳<?php echo number_format((float)($order['coupon_discount'] ?? 0), 2); ?></span></div>
+                            <div class="d-flex justify-content-between"><span class="muted">Coupon (<?php echo htmlspecialchars($order['coupon_code']); ?>): </span><span>-৳<?php echo number_format((float)($order['coupon_discount'] ?? 0), 2); ?></span></div>
                         <?php endif; ?>
                         <hr>
                         <div class="d-flex justify-content-between" style="font-weight:700;">
@@ -175,10 +179,9 @@ try {
                 </div>
             </div>
 
-            
+
         </div>
     </div>
 </body>
+
 </html>
-
-

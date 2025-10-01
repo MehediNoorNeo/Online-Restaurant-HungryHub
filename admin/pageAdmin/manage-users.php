@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -34,7 +34,7 @@ if (isset($_SESSION['flash_message'])) {
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'update_user') {
         $user_id = $_POST['user_id'] ?? 0;
         $name = $_POST['name'] ?? '';
@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $phone = $_POST['phone'] ?? '';
         $address = $_POST['address'] ?? '';
         $status = $_POST['status'] ?? 'active';
-        
+
         // Basic validation
         if (empty($name) || empty($email)) {
             $_SESSION['flash_message'] = 'Name and email are required';
@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash_type'] = 'success';
             header('Location: manage-users.php');
             exit();
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['flash_message'] = 'Error updating user: ' . $e->getMessage();
             $_SESSION['flash_type'] = 'error';
             header('Location: manage-users.php');
@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'delete_user') {
         $user_id = $_POST['user_id'] ?? 0;
-        
+
         try {
             $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
             $stmt->execute([$user_id]);
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['flash_type'] = 'success';
             header('Location: manage-users.php');
             exit();
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['flash_message'] = 'Error deleting user: ' . $e->getMessage();
             $_SESSION['flash_type'] = 'error';
             header('Location: manage-users.php');
@@ -117,17 +117,28 @@ if (!empty($search)) {
 
 $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-// Get users from database (now using orders and total_spent directly from users table)
+// Get users from database with computed orders count and total_spent from orders table
 try {
-    $query = "SELECT u.*
+    $query = "SELECT 
+                u.*,
+                (
+                  SELECT COUNT(*) 
+                  FROM orders o_all 
+                  WHERE o_all.user_id = u.id AND o_all.status = 'completed'
+                ) AS orders,
+                (
+                  SELECT COALESCE(SUM(o_completed.total), 0)
+                  FROM orders o_completed
+                  WHERE o_completed.user_id = u.id AND o_completed.status = 'completed'
+                ) AS total_spent
               FROM users u 
               $where_clause 
               ORDER BY u.created_at DESC";
-    
+
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $users = [];
 }
 
@@ -140,7 +151,7 @@ try {
         SUM(CASE WHEN status = 'banned' THEN 1 ELSE 0 END) as banned_users
         FROM users");
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $stats = [
         'total_users' => 0,
         'active_users' => 0,
@@ -152,12 +163,14 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Users - HungryHub Admin</title>
     <link rel="stylesheet" href="../cssAdmin/manage-users.css?v=<?php echo time(); ?>">
 </head>
+
 <body>
     <div class="header">
         <h1>Manage Users</h1>
@@ -171,7 +184,7 @@ try {
             <a href="logout.php">Logout</a>
         </div>
     </div>
-    
+
     <div class="container">
         <div id="toasts" class="toasts-container"></div>
         <div class="stats-grid">
@@ -192,9 +205,9 @@ try {
                 <div class="stat-label">Banned Users</div>
             </div>
         </div>
-        
+
         <?php /* Toasts will show via JS; keeping old block removed to avoid duplicates */ ?>
-        
+
         <div class="filters">
             <form method="GET" action="">
                 <div class="filter-row">
@@ -207,12 +220,12 @@ try {
                             <option value="banned" <?php echo $status_filter === 'banned' ? 'selected' : ''; ?>>Banned</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="search">Search:</label>
                         <input type="text" name="search" id="search" placeholder="Name, Email, or Phone" value="<?php echo htmlspecialchars($search); ?>">
                     </div>
-                    
+
                     <div class="filter-group filter-actions">
                         <label>&nbsp;</label>
                         <div class="actions-grid">
@@ -223,12 +236,12 @@ try {
                 </div>
             </form>
         </div>
-        
+
         <div class="users-table">
             <div class="table-header">
                 <h3>Users List</h3>
             </div>
-            
+
             <?php if (empty($users)): ?>
                 <div class="no-users">
                     <p>No users found. Make sure your database tables are set up correctly.</p>
@@ -250,31 +263,31 @@ try {
                     </thead>
                     <tbody>
                         <?php foreach ($users as $user): ?>
-                        <tr>
-                            <td>#<?php echo $user['id']; ?></td>
-                            <td><?php echo htmlspecialchars($user['name']); ?></td>
-                            <td><?php echo htmlspecialchars($user['email']); ?></td>
-                            <td><?php echo htmlspecialchars($user['phone'] ?? 'N/A'); ?></td>
-                            <td>
-                                <span class="status status-<?php echo $user['status']; ?>">
-                                    <?php echo ucfirst($user['status']); ?>
-                                </span>
-                            </td>
-                            <td><?php echo number_format($user['orders'] ?? 0); ?></td>
-                            <td><span class="currency-symbol">৳</span><?php echo number_format($user['total_spent'] ?? 0); ?></td>
-                            <td><?php echo date('M j, Y', strtotime($user['created_at'])); ?></td>
-                            <td>
-                                <a href="#" class="btn btn-edit" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($user)); ?>)">Edit</a>
-                                <a href="#" class="btn btn-delete" onclick="openDeleteModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name'], ENT_QUOTES); ?>')">Delete</a>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td>#<?php echo $user['id']; ?></td>
+                                <td><?php echo htmlspecialchars($user['name']); ?></td>
+                                <td><?php echo htmlspecialchars($user['email']); ?></td>
+                                <td><?php echo htmlspecialchars($user['phone'] ?? 'N/A'); ?></td>
+                                <td>
+                                    <span class="status status-<?php echo $user['status']; ?>">
+                                        <?php echo ucfirst($user['status']); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo number_format($user['orders'] ?? 0); ?></td>
+                                <td><span class="currency-symbol">৳</span><?php echo number_format($user['total_spent'] ?? 0); ?></td>
+                                <td><?php echo date('M j, Y', strtotime($user['created_at'])); ?></td>
+                                <td>
+                                    <a href="#" class="btn btn-edit" onclick="openEditModal(<?php echo htmlspecialchars(json_encode($user)); ?>)">Edit</a>
+                                    <a href="#" class="btn btn-delete" onclick="openDeleteModal(<?php echo $user['id']; ?>, '<?php echo htmlspecialchars($user['name'], ENT_QUOTES); ?>')">Delete</a>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
         </div>
     </div>
-    
+
     <!-- Edit User Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
@@ -282,28 +295,28 @@ try {
             <form id="editForm" method="POST">
                 <input type="hidden" name="action" value="update_user">
                 <input type="hidden" name="user_id" id="editUserId">
-                
+
                 <div class="form-content">
                     <div class="form-group">
                         <label for="editName">Name:</label>
                         <input type="text" id="editName" name="name" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editEmail">Email:</label>
                         <input type="email" id="editEmail" name="email" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editPhone">Phone:</label>
                         <input type="tel" id="editPhone" name="phone" inputmode="tel" pattern="^(\+?88)?01[3-9]\d{8}$" title="Bangladesh mobile format: 01XXXXXXXXX or +8801XXXXXXXXX" placeholder="e.g., 017XXXXXXXX or +88017XXXXXXXX">
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editAddress">Address:</label>
                         <textarea id="editAddress" name="address" rows="3"></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="editStatus">Status:</label>
                         <select id="editStatus" name="status">
@@ -313,7 +326,7 @@ try {
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Update User</button>
@@ -321,7 +334,7 @@ try {
             </form>
         </div>
     </div>
-    
+
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content" style="max-width: 480px;">
@@ -333,8 +346,11 @@ try {
             </div>
         </div>
     </div>
-    
-    <script>window.__flashMessage = <?php echo json_encode(['type' => $message_type ?: '', 'text' => $message ?: '']); ?>;</script>
+
+    <script>
+        window.__flashMessage = <?php echo json_encode(['type' => $message_type ?: '', 'text' => $message ?: '']); ?>;
+    </script>
     <script src="../scriptAdmin/manage-users.js?v=<?php echo time(); ?>"></script>
 </body>
+
 </html>

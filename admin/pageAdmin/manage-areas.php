@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -25,10 +25,10 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'add') {
         $area_name = trim($_POST['area_name'] ?? '');
-        
+
         if (empty($area_name)) {
             $_SESSION['message'] = 'Area name is required!';
             $_SESSION['message_type'] = 'error';
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$area_name]);
                 $_SESSION['message'] = "Area '{$area_name}' added successfully!";
                 $_SESSION['message_type'] = 'success';
-            } catch(PDOException $e) {
+            } catch (PDOException $e) {
                 if ($e->getCode() == 23000) { // Duplicate entry
                     $_SESSION['message'] = "Area '{$area_name}' already exists!";
                     $_SESSION['message_type'] = 'error';
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'edit') {
         $id = $_POST['id'] ?? 0;
         $area_name = trim($_POST['area_name'] ?? '');
-        
+
         if (empty($area_name)) {
             $_SESSION['message'] = 'Area name is required!';
             $_SESSION['message_type'] = 'error';
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute([$area_name, $id]);
                 $_SESSION['message'] = "Area updated successfully!";
                 $_SESSION['message_type'] = 'success';
-            } catch(PDOException $e) {
+            } catch (PDOException $e) {
                 if ($e->getCode() == 23000) { // Duplicate entry
                     $_SESSION['message'] = "Area '{$area_name}' already exists!";
                     $_SESSION['message_type'] = 'error';
@@ -73,30 +73,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? 0;
-        
+
         try {
             // First, get the area name for the confirmation message
             $stmt = $pdo->prepare("SELECT area_name FROM areas WHERE id = ?");
             $stmt->execute([$id]);
             $area = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($area) {
                 // Delete the area
                 $stmt = $pdo->prepare("DELETE FROM areas WHERE id = ?");
                 $stmt->execute([$id]);
-                
+
                 $_SESSION['message'] = "Area '{$area['area_name']}' deleted successfully!";
                 $_SESSION['message_type'] = 'success';
             } else {
                 $_SESSION['message'] = 'Area not found!';
                 $_SESSION['message_type'] = 'error';
             }
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['message'] = 'Error deleting area: ' . $e->getMessage();
             $_SESSION['message_type'] = 'error';
         }
     }
-    
+
     // Redirect to prevent form resubmission
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit();
@@ -114,13 +114,14 @@ unset($_SESSION['message_type']);
 try {
     $stmt = $pdo->query("SELECT * FROM areas ORDER BY area_name ASC");
     $areas = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $areas = [];
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -128,6 +129,7 @@ try {
     <link rel="stylesheet" href="../cssAdmin/manage-areas.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <div class="header">
         <h1>Manage Delivery Areas</h1>
@@ -141,7 +143,7 @@ try {
             <a href="logout.php">Logout</a>
         </div>
     </div>
-    
+
     <div class="container">
         <div class="page-header">
             <h2>Delivery Areas Management</h2>
@@ -151,14 +153,14 @@ try {
                 </button>
             </div>
         </div>
-        
+
         <?php if ($message): ?>
             <div class="message <?php echo $message_type; ?>">
                 <i class="fas fa-<?php echo $message_type === 'success' ? 'check-circle' : ($message_type === 'error' ? 'exclamation-circle' : 'info-circle'); ?>"></i>
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
+
         <!-- Areas List -->
         <div class="areas-section">
             <?php if (empty($areas)): ?>
@@ -199,7 +201,7 @@ try {
             <?php endif; ?>
         </div>
     </div>
-    
+
     <!-- Modal for Add/Edit -->
     <div id="areaModal" class="modal">
         <div class="modal-content">
@@ -212,17 +214,17 @@ try {
             <form id="areaForm" method="POST">
                 <input type="hidden" name="action" id="formAction" value="add">
                 <input type="hidden" name="id" id="formId" value="">
-                
+
                 <div class="form-content">
                     <div class="form-group">
                         <label for="area_name">Area Name *</label>
-                        <input type="text" id="area_name" name="area_name" required 
-                               placeholder="Enter area name (e.g., Dhanmondi, Gulshan)" 
-                               maxlength="100">
+                        <input type="text" id="area_name" name="area_name" required
+                            placeholder="Enter area name (e.g., Dhanmondi, Gulshan)"
+                            maxlength="100">
                         <small class="form-help">Enter the name of the delivery area</small>
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">
@@ -232,7 +234,7 @@ try {
             </form>
         </div>
     </div>
-    
+
     <!-- Delete Confirmation Modal -->
     <div id="deleteModal" class="modal">
         <div class="modal-content">
@@ -252,11 +254,11 @@ try {
                     <p class="warning-text">This action cannot be undone and may affect delivery options for customers.</p>
                 </div>
             </div>
-            
+
             <form id="deleteForm" method="POST">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="id" id="deleteId" value="">
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
                     <button type="submit" class="btn btn-danger">
@@ -266,7 +268,8 @@ try {
             </form>
         </div>
     </div>
-    
+
     <script src="../scriptAdmin/manage-areas.js?v=<?php echo time(); ?>"></script>
 </body>
+
 </html>

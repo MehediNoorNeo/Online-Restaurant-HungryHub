@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -27,18 +27,18 @@ $message_type = '';
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'update_status') {
         $order_id = $_POST['order_id'] ?? 0;
         $new_status = $_POST['status'] ?? '';
-        
+
         try {
             $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
             $stmt->execute([$new_status, $order_id]);
-            
+
             // Redirect to prevent form resubmission on page refresh
             $redirect_url = 'manage-orders.php?updated=1&order_id=' . urlencode($order_id);
-            
+
             // Preserve current filters if they exist
             if (isset($_GET['status']) && $_GET['status'] !== 'all') {
                 $redirect_url .= '&status=' . urlencode($_GET['status']);
@@ -46,10 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_GET['search']) && !empty($_GET['search'])) {
                 $redirect_url .= '&search=' . urlencode($_GET['search']);
             }
-            
+
             header('Location: ' . $redirect_url);
             exit();
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $message = 'Error updating order status: ' . $e->getMessage();
             $message_type = 'error';
         }
@@ -93,11 +93,11 @@ try {
               LEFT JOIN users u ON o.user_id = u.id 
               $where_clause 
               ORDER BY o.created_at DESC";
-    
+
     $stmt = $pdo->prepare($query);
     $stmt->execute($params);
     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $orders = [];
 }
 
@@ -112,7 +112,7 @@ try {
         SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as total_revenue
         FROM orders");
     $stats = $stmt->fetch(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $stats = [
         'total_orders' => 0,
         'pending_orders' => 0,
@@ -126,12 +126,14 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Orders - HungryHub Admin</title>
     <link rel="stylesheet" href="../cssAdmin/manage-orders.css?v=<?php echo time(); ?>">
 </head>
+
 <body>
     <div class="header">
         <h1>Manage Orders</h1>
@@ -145,7 +147,7 @@ try {
             <a href="logout.php">Logout</a>
         </div>
     </div>
-    
+
     <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
@@ -169,13 +171,13 @@ try {
                 <div class="stat-label">Total Revenue</div>
             </div>
         </div>
-        
+
         <?php if ($message): ?>
             <div class="message <?php echo $message_type; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
+
         <div class="filters">
             <form method="GET" action="">
                 <div class="filter-row">
@@ -189,12 +191,12 @@ try {
                             <option value="cancelled" <?php echo $status_filter === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
                         </select>
                     </div>
-                    
+
                     <div class="filter-group">
                         <label for="search">Search:</label>
                         <input type="text" name="search" id="search" placeholder="Order ID, Customer Name, or Email" value="<?php echo htmlspecialchars($search); ?>">
                     </div>
-                    
+
                     <div class="filter-group filter-actions">
                         <label>&nbsp;</label>
                         <div class="actions-grid">
@@ -205,12 +207,12 @@ try {
                 </div>
             </form>
         </div>
-        
+
         <div class="orders-table">
             <div class="table-header">
                 <h3>Orders List</h3>
             </div>
-            
+
             <?php if (empty($orders)): ?>
                 <div class="no-orders">
                     <p>No orders found. Make sure your database tables are set up correctly.</p>
@@ -232,49 +234,52 @@ try {
                     </thead>
                     <tbody>
                         <?php foreach ($orders as $index => $order): ?>
-                        <tr class="order-row" data-href="order-details.php?order_id=<?php echo urlencode($order['order_id']); ?>">
-                            <td><?php echo $index + 1; ?></td>
-                            <td><a class="order-link" href="order-details.php?order_id=<?php echo urlencode($order['order_id']); ?>">#<?php echo htmlspecialchars($order['order_id']); ?></a></td>
-                            <td><?php echo htmlspecialchars($order['customer_name'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($order['customer_email'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($order['customer_phone'] ?? 'N/A'); ?></td>
-                            <td><span class="list-currency-symbol">৳</span><?php echo number_format($order['total'], 2); ?></td>
-                            <td>
-                                <span class="status status-<?php echo $order['status']; ?>">
-                                    <?php echo ucfirst($order['status']); ?>
-                                </span>
-                            </td>
-                            <td><?php echo date('M j, Y g:i A', strtotime($order['created_at'])); ?></td>
-                            <td>
-                                <form method="POST" style="display: inline-block;">
-                                    <input type="hidden" name="action" value="update_status">
-                                    <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
-                                    <select name="status" class="status-select">
-                                        <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
-                                        <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>Processing</option>
-                                        <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                        <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-                                    </select>
-                                    <button type="submit" class="update-btn">Update</button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr class="order-row" data-href="order-details.php?order_id=<?php echo urlencode($order['order_id']); ?>">
+                                <td><?php echo $index + 1; ?></td>
+                                <td><a class="order-link" href="order-details.php?order_id=<?php echo urlencode($order['order_id']); ?>">#<?php echo htmlspecialchars($order['order_id']); ?></a></td>
+                                <td><?php echo htmlspecialchars($order['customer_name'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($order['customer_email'] ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($order['customer_phone'] ?? 'N/A'); ?></td>
+                                <td><span class="list-currency-symbol">৳</span><?php echo number_format($order['total'], 2); ?></td>
+                                <td>
+                                    <span class="status status-<?php echo $order['status']; ?>">
+                                        <?php echo ucfirst($order['status']); ?>
+                                    </span>
+                                </td>
+                                <td><?php echo date('M j, Y g:i A', strtotime($order['created_at'])); ?></td>
+                                <td>
+                                    <form method="POST" style="display: inline-block;">
+                                        <input type="hidden" name="action" value="update_status">
+                                        <input type="hidden" name="order_id" value="<?php echo $order['id']; ?>">
+                                        <select name="status" class="status-select">
+                                            <option value="pending" <?php echo $order['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
+                                            <option value="processing" <?php echo $order['status'] === 'processing' ? 'selected' : ''; ?>>Processing</option>
+                                            <option value="completed" <?php echo $order['status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
+                                            <option value="cancelled" <?php echo $order['status'] === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
+                                        </select>
+                                        <button type="submit" class="update-btn">Update</button>
+                                    </form>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
         </div>
     </div>
-<script>
-// Make the entire row clickable except the Actions cell
-document.querySelectorAll('.order-row').forEach(function(row){
-  row.addEventListener('click', function(e){
-    // prevent when clicking inside the form/actions
-    if (e.target.closest('form') || e.target.closest('select') || e.target.closest('button') || e.target.closest('a.order-link')) return;
-    const href = this.getAttribute('data-href');
-    if (href) { window.location.href = href; }
-  });
-});
-</script>
+    <script>
+        // Make the entire row clickable except the Actions cell
+        document.querySelectorAll('.order-row').forEach(function(row) {
+            row.addEventListener('click', function(e) {
+                // prevent when clicking inside the form/actions
+                if (e.target.closest('form') || e.target.closest('select') || e.target.closest('button') || e.target.closest('a.order-link')) return;
+                const href = this.getAttribute('data-href');
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>

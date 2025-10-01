@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -33,34 +33,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 case 'create':
                     $coupon_code = strtoupper(trim($_POST['coupon_code']));
                     $percentage = floatval($_POST['percentage']);
-                    
+
                     // Validate input
                     if (empty($coupon_code) || $percentage <= 0 || $percentage > 100) {
                         throw new Exception('Invalid coupon data');
                     }
-                    
+
                     $stmt = $pdo->prepare("INSERT INTO coupons (coupon_code, percentage) VALUES (?, ?)");
                     $stmt->execute([$coupon_code, $percentage]);
                     $message = 'Coupon created successfully!';
                     $message_type = 'success';
                     break;
-                    
+
                 case 'update':
                     $id = intval($_POST['id']);
                     $coupon_code = strtoupper(trim($_POST['coupon_code']));
                     $percentage = floatval($_POST['percentage']);
-                    
+
                     // Validate input
                     if (empty($coupon_code) || $percentage <= 0 || $percentage > 100) {
                         throw new Exception('Invalid coupon data');
                     }
-                    
+
                     $stmt = $pdo->prepare("UPDATE coupons SET coupon_code = ?, percentage = ? WHERE id = ?");
                     $stmt->execute([$coupon_code, $percentage, $id]);
                     $message = 'Coupon updated successfully!';
                     $message_type = 'success';
                     break;
-                    
+
                 case 'delete':
                     $id = intval($_POST['id']);
                     $stmt = $pdo->prepare("DELETE FROM coupons WHERE id = ?");
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $stmt = $pdo->query("SELECT id, coupon_code, percentage, created_date FROM coupons ORDER BY id DESC");
     $coupons = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $coupons = [];
     $message = 'Error fetching coupons: ' . $e->getMessage();
     $message_type = 'error';
@@ -89,6 +89,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,6 +98,7 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../cssAdmin/manage-coupons.css">
 </head>
+
 <body>
     <div class="header">
         <h1>Manage Coupons</h1>
@@ -110,7 +112,7 @@ try {
             <a href="logout.php">Logout</a>
         </div>
     </div>
-    
+
     <div class="container">
         <div class="page-header">
             <h2>Coupon Management</h2>
@@ -118,13 +120,13 @@ try {
                 <a href="#" class="add-food-btn" onclick="openCouponModal('add')">+ Add New Coupon</a>
             </div>
         </div>
-        
+
         <?php if ($message): ?>
             <div class="message <?php echo $message_type; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
+
         <!-- Coupons Table -->
         <div class="table-container">
             <table class="food-table">
@@ -156,7 +158,7 @@ try {
                                     <span class="percentage-badge"><?php echo $coupon['percentage']; ?>%</span>
                                 </td>
                                 <td>
-                                    <?php 
+                                    <?php
                                     if (isset($coupon['created_date']) && !empty($coupon['created_date'])) {
                                         echo date('M j, Y', strtotime($coupon['created_date']));
                                     } else {
@@ -165,12 +167,12 @@ try {
                                     ?>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary me-1" 
-                                            onclick="editCoupon(<?php echo htmlspecialchars(json_encode($coupon)); ?>)">
+                                    <button class="btn btn-sm btn-outline-primary me-1"
+                                        onclick="editCoupon(<?php echo htmlspecialchars(json_encode($coupon)); ?>)">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger" 
-                                            onclick="deleteCoupon(<?php echo $coupon['id']; ?>, '<?php echo htmlspecialchars($coupon['coupon_code']); ?>')">
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        onclick="deleteCoupon(<?php echo $coupon['id']; ?>, '<?php echo htmlspecialchars($coupon['coupon_code']); ?>')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -194,19 +196,19 @@ try {
                     <div class="modal-body">
                         <input type="hidden" name="action" id="formAction" value="create">
                         <input type="hidden" name="id" id="couponId">
-                        
+
                         <div class="mb-3">
                             <label for="coupon_code" class="form-label">Coupon Code *</label>
-                            <input type="text" class="form-control" id="coupon_code" name="coupon_code" 
-                                   placeholder="e.g., WELCOME10" required maxlength="20">
+                            <input type="text" class="form-control" id="coupon_code" name="coupon_code"
+                                placeholder="e.g., WELCOME10" required maxlength="20">
                             <div class="form-text">Enter a unique coupon code (will be converted to uppercase)</div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="percentage" class="form-label">Discount Percentage *</label>
                             <div class="input-group">
-                                <input type="number" class="form-control" id="percentage" name="percentage" 
-                                       min="1" max="100" step="0.01" placeholder="10" required>
+                                <input type="number" class="form-control" id="percentage" name="percentage"
+                                    min="1" max="100" step="0.01" placeholder="10" required>
                                 <span class="input-group-text">%</span>
                             </div>
                             <div class="form-text">Enter discount percentage (1-100%)</div>
@@ -252,4 +254,5 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../scriptAdmin/manage-coupons.js?v=<?php echo time(); ?>"></script>
 </body>
+
 </html>

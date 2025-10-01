@@ -64,13 +64,13 @@ include '../components/header.php';
                 </thead>
                 <tbody>
                     <?php foreach ($historyOrders as $o): ?>
-                    <tr>
-                        <td class="fw-semibold"><?php echo htmlspecialchars($o['order_id']); ?></td>
-                        <td><?php echo date('M j, Y g:i A', strtotime($o['created_at'])); ?></td>
-                        <td class="text-capitalize"><?php echo htmlspecialchars($o['status']); ?></td>
-                        <td class="text-uppercase small text-muted"><?php echo htmlspecialchars($o['payment_method']); ?> · <?php echo htmlspecialchars($o['payment_status']); ?></td>
-                        <td class="text-end">৳<?php echo number_format((float)$o['total']); ?></td>
-                    </tr>
+                        <tr>
+                            <td class="fw-semibold"><?php echo htmlspecialchars($o['order_id']); ?></td>
+                            <td><?php echo date('M j, Y g:i A', strtotime($o['created_at'])); ?></td>
+                            <td class="text-capitalize"><?php echo htmlspecialchars($o['status']); ?></td>
+                            <td class="text-uppercase small text-muted"><?php echo htmlspecialchars($o['payment_method']); ?> · <?php echo htmlspecialchars($o['payment_status']); ?></td>
+                            <td class="text-end">৳<?php echo number_format((float)$o['total']); ?></td>
+                        </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
@@ -80,7 +80,12 @@ include '../components/header.php';
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+<!-- Custom JavaScript -->
+<script src="../javaScript/script.js"></script>
+<?php if (isset($include_checkout_js) && $include_checkout_js): ?>
+    <script src="../javaScript/checkout.js"></script>
+<?php endif; ?>
+
 </body>
+
 </html>
-
-

@@ -76,33 +76,32 @@ if (move_uploaded_file($file['tmp_name'], $upload_path)) {
                 $image = imagecreatefromgif($upload_path);
                 break;
         }
-        
+
         if ($image) {
             // Create white background
             $jpg_image = imagecreatetruecolor(imagesx($image), imagesy($image));
             $white = imagecolorallocate($jpg_image, 255, 255, 255);
             imagefill($jpg_image, 0, 0, $white);
-            
+
             // Copy original image onto white background
             imagecopy($jpg_image, $image, 0, 0, 0, 0, imagesx($image), imagesy($image));
-            
+
             // Save as JPG
             imagejpeg($jpg_image, $upload_path, 90);
-            
+
             // Clean up
             imagedestroy($image);
             imagedestroy($jpg_image);
         }
     }
-    
+
     // Return success with relative path
     $relative_path = "assets/" . strtolower($category) . "/" . $filename;
     echo json_encode([
-        'success' => true, 
+        'success' => true,
         'message' => 'File uploaded successfully',
         'file_path' => $relative_path
     ]);
 } else {
     echo json_encode(['success' => false, 'message' => 'Failed to upload file']);
 }
-?>

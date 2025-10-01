@@ -299,6 +299,14 @@ body {
     vertical-align: middle;
 }
 
+/* Center align numeric columns */
+.table th:nth-child(6), /* Orders */
+.table td:nth-child(6),
+.table th:nth-child(7), /* Total Spent */
+.table td:nth-child(7) {
+    text-align: center;
+}
+
 .table tbody tr {
     transition: all 0.3s ease;
 }
@@ -343,11 +351,11 @@ body {
 }
 
 span.currency-symbol {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     margin-right: 0.2rem;
-    font-weight: 700;
+    font-weight: 500;
     color: #080504 !important;
-    font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', sans-serif;
 }
 
 .btn {
@@ -674,3 +682,61 @@ span.currency-symbol {
 .toast.info { border-left: 4px solid #3498db; }
 .toast.info .progress > span { background: #3498db; }
 .toast.info .icon { color: #3498db; }
+
+/* Inline notification system (shared with manage-food.js) */
+.notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    min-width: 300px;
+    max-width: 380px;
+    background: var(--bg-color, #ffffff);
+    color: var(--text-color, #2c3e50);
+    border: 2px solid var(--border-color, #3498db);
+    border-radius: 16px;
+    box-shadow: 0 14px 28px rgba(0,0,0,0.12);
+    transform: translateX(120%);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    z-index: 2000;
+    overflow: hidden; /* ensure rounded progress corners */
+}
+.notification-show { transform: translateX(0); opacity: 1; }
+.notification-hide { opacity: 0; transform: translateX(120%); }
+.notification-content {
+    display: grid;
+    grid-template-columns: 28px 1fr 28px;
+    align-items: start;
+    gap: 0.75rem;
+    padding: 1.1rem 1.2rem 0.8rem 1.2rem;
+}
+.notification-icon { color: var(--border-color, #3498db); font-size: 20px; line-height: 1; }
+.notification-title { font-weight: 800; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.2px; }
+.notification-text { font-weight: 500; }
+.notification-close {
+    background: transparent;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #2c3e50;
+}
+.notification-progress { height: 4px; background: rgba(0,0,0,0.06); border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; }
+.notification { --notif-duration: 4000ms; }
+.notification-progress { position: relative; overflow: hidden; }
+.notification-progress::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background: var(--border-color, #3498db);
+    transform-origin: left;
+    animation: notif-progress-decrease var(--notif-duration) linear forwards;
+}
+@keyframes notif-progress-decrease {
+    from { transform: scaleX(1); }
+    to { transform: scaleX(0); }
+}

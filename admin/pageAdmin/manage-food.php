@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -25,20 +25,20 @@ $admin_username = $_SESSION['admin_username'] ?? 'Admin';
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'add') {
         $name = $_POST['name'] ?? '';
         $category = $_POST['category'] ?? '';
         $price = $_POST['price'] ?? 0;
         $description = $_POST['description'] ?? '';
         $image = $_POST['image'] ?? '';
-        
+
         try {
             $stmt = $pdo->prepare("INSERT INTO food_items (category, name, price, description, image) VALUES (?, ?, ?, ?, ?)");
             $stmt->execute([$category, $name, $price, $description, $image]);
             $_SESSION['message'] = 'Food item added successfully!';
             $_SESSION['message_type'] = 'success';
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['message'] = 'Error adding food item: ' . $e->getMessage();
             $_SESSION['message_type'] = 'error';
         }
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $price = $_POST['price'] ?? 0;
         $description = $_POST['description'] ?? '';
         $image = $_POST['image'] ?? '';
-        
+
         try {
             // Fetch existing item to compare previous image
             $prevStmt = $pdo->prepare("SELECT image, category FROM food_items WHERE id = ?");
@@ -67,17 +67,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $deleted_any = false;
                 $primary_path = '../../' . $old_image;
                 if (file_exists($primary_path)) {
-                    if (@unlink($primary_path)) { $deleted_any = true; error_log("Deleted old image (primary): $primary_path"); }
+                    if (@unlink($primary_path)) {
+                        $deleted_any = true;
+                        error_log("Deleted old image (primary): $primary_path");
+                    }
                 }
                 if (!$deleted_any) {
                     $image_filename = basename($old_image);
                     $category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', ($old_category ?: $category)));
                     $alt_cat_path = "../../assets/{$category_slug}/{$image_filename}";
-                    if (file_exists($alt_cat_path) && @unlink($alt_cat_path)) { $deleted_any = true; error_log("Deleted old image (category folder): $alt_cat_path"); }
+                    if (file_exists($alt_cat_path) && @unlink($alt_cat_path)) {
+                        $deleted_any = true;
+                        error_log("Deleted old image (category folder): $alt_cat_path");
+                    }
                 }
                 if (!$deleted_any) {
                     $alt_main_path = "../../assets/{$image_filename}";
-                    if (isset($image_filename) && file_exists($alt_main_path) && @unlink($alt_main_path)) { $deleted_any = true; error_log("Deleted old image (main assets): $alt_main_path"); }
+                    if (isset($image_filename) && file_exists($alt_main_path) && @unlink($alt_main_path)) {
+                        $deleted_any = true;
+                        error_log("Deleted old image (main assets): $alt_main_path");
+                    }
                 }
                 if (!$deleted_any) {
                     error_log("Old image not found for deletion: $old_image");
@@ -86,24 +95,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $_SESSION['message'] = 'Food item updated successfully!';
             $_SESSION['message_type'] = 'success';
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['message'] = 'Error updating food item: ' . $e->getMessage();
             $_SESSION['message_type'] = 'error';
         }
     } elseif ($action === 'delete') {
         $id = $_POST['id'] ?? 0;
-        
+
         try {
             // First, get the food item details to find the image path
             $stmt = $pdo->prepare("SELECT image, category FROM food_items WHERE id = ?");
             $stmt->execute([$id]);
             $food_item = $stmt->fetch(PDO::FETCH_ASSOC);
-            
+
             if ($food_item) {
                 // Delete the image file if it exists
                 $image_path = '../../' . $food_item['image'];
                 $image_deleted = false;
-                
+
                 if (file_exists($image_path)) {
                     if (unlink($image_path)) {
                         error_log("Deleted food item image: $image_path");
@@ -116,7 +125,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $image_filename = basename($food_item['image']);
                     $category = $food_item['category'];
                     $category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $category));
-                    
+
                     // Try category subfolder
                     $category_image_path = "../../assets/{$category_slug}/{$image_filename}";
                     if (file_exists($category_image_path)) {
@@ -125,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $image_deleted = true;
                         }
                     }
-                    
+
                     // Try main assets folder
                     $main_image_path = "../../assets/{$image_filename}";
                     if (file_exists($main_image_path)) {
@@ -135,11 +144,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                     }
                 }
-                
+
                 // Delete the food item from database
                 $stmt = $pdo->prepare("DELETE FROM food_items WHERE id = ?");
                 $stmt->execute([$id]);
-                
+
                 if ($image_deleted) {
                     $_SESSION['message'] = 'Food item and its image deleted successfully!';
                 } else {
@@ -150,17 +159,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['message'] = 'Food item not found!';
                 $_SESSION['message_type'] = 'error';
             }
-        } catch(PDOException $e) {
+        } catch (PDOException $e) {
             $_SESSION['message'] = 'Error deleting food item: ' . $e->getMessage();
             $_SESSION['message_type'] = 'error';
         }
     } elseif ($action === 'add_category') {
         $category_name = $_POST['category_name'] ?? '';
         $category_description = $_POST['category_description'] ?? '';
-        
+
         // Validate category name (remove spaces, special chars)
         $category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $category_name));
-        
+
         // Log debug information for troubleshooting (not shown to user)
         error_log("Category creation: $category_name ($category_slug)");
         if (isset($_FILES['category_picture'])) {
@@ -169,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['category_icon'])) {
             error_log("Icon upload: error=" . $_FILES['category_icon']['error'] . ", size=" . $_FILES['category_icon']['size']);
         }
-        
+
         if (empty($category_slug)) {
             $_SESSION['message'] = 'Invalid category name. Please use only letters and numbers.';
             $_SESSION['message_type'] = 'error';
@@ -178,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // First, insert into food_menu table
                 $stmt = $pdo->prepare("INSERT INTO food_menu (category, description) VALUES (?, ?)");
                 $stmt->execute([$category_name, $category_description]);
-                
+
                 // Create main assets folder if it doesn't exist
                 $main_assets_folder = '../../assets';
                 if (!file_exists($main_assets_folder)) {
@@ -186,7 +195,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Failed to create main assets folder: $main_assets_folder");
                     }
                 }
-                
+
                 // Create category subfolder in assets
                 $category_assets_folder = '../../assets/' . $category_slug;
                 if (!file_exists($category_assets_folder)) {
@@ -194,29 +203,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Failed to create category assets folder: $category_assets_folder");
                     }
                 }
-                
+
                 // Log folder creation
                 error_log("Created main assets folder: $main_assets_folder");
                 error_log("Created empty category folder: $category_assets_folder");
-                
+
                 // Handle file uploads
                 $category_picture = '';
                 $category_icon = '';
-                
+
                 // Upload category picture (convert to PNG)
                 if (isset($_FILES['category_picture']) && $_FILES['category_picture']['error'] === 0) {
                     $picture_name = $category_slug . '_pic.png';
                     $main_picture_path = $main_assets_folder . '/' . $picture_name;
-                    
+
                     // Log picture upload details
                     error_log("Picture temp file: " . $_FILES['category_picture']['tmp_name']);
                     error_log("Picture destination: $main_picture_path");
-                    
+
                     // Ensure main assets folder is writable
                     if (!is_writable($main_assets_folder)) {
                         throw new Exception("Main assets folder is not writable: $main_assets_folder");
                     }
-                    
+
                     // Convert and save to main assets folder
                     if (convertImageToPNG($_FILES['category_picture']['tmp_name'], $main_picture_path)) {
                         $category_picture = 'assets/' . $picture_name;
@@ -225,21 +234,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Failed to convert and save category picture");
                     }
                 } else {
-                    $error_msg = isset($_FILES['category_picture']) ? 
-                        "Upload error: " . $_FILES['category_picture']['error'] : 
+                    $error_msg = isset($_FILES['category_picture']) ?
+                        "Upload error: " . $_FILES['category_picture']['error'] :
                         "No picture file uploaded";
                     throw new Exception($error_msg);
                 }
-                
+
                 // Upload category icon (convert to PNG)
                 if (isset($_FILES['category_icon']) && $_FILES['category_icon']['error'] === 0) {
                     $icon_name = $category_slug . '_icon.png';
                     $main_icon_path = $main_assets_folder . '/' . $icon_name;
-                    
+
                     // Log icon upload details
                     error_log("Icon temp file: " . $_FILES['category_icon']['tmp_name']);
                     error_log("Icon destination: $main_icon_path");
-                    
+
                     // Convert and save to main assets folder
                     if (convertImageToPNG($_FILES['category_icon']['tmp_name'], $main_icon_path)) {
                         $category_icon = 'assets/' . $icon_name;
@@ -248,19 +257,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         throw new Exception("Failed to convert and save category icon");
                     }
                 } else {
-                    $error_msg = isset($_FILES['category_icon']) ? 
-                        "Upload error: " . $_FILES['category_icon']['error'] : 
+                    $error_msg = isset($_FILES['category_icon']) ?
+                        "Upload error: " . $_FILES['category_icon']['error'] :
                         "No icon file uploaded";
                     throw new Exception($error_msg);
                 }
-                
+
                 // Create category page
                 createCategoryPage($category_slug, $category_name, $category_description, $category_picture, $category_icon);
-                
+
                 $_SESSION['message'] = "Food menu '{$category_name}' created successfully! The category is ready for you to add food items.";
                 $_SESSION['message_type'] = 'success';
-                
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 $_SESSION['message'] = 'Error creating food menu: ' . $e->getMessage();
                 $_SESSION['message_type'] = 'error';
             }
@@ -268,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'delete_category') {
         $category_name = $_POST['category_name'] ?? '';
         $confirm_text = $_POST['confirm_text'] ?? '';
-        
+
         if (strtolower($confirm_text) !== 'confirm') {
             $_SESSION['message'] = 'Deletion cancelled. You must type "confirm" to delete the category.';
             $_SESSION['message_type'] = 'error';
@@ -276,39 +284,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 // Get category slug
                 $category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $category_name));
-                
+
                 // Delete all food items in this category
                 $stmt = $pdo->prepare("DELETE FROM food_items WHERE category = ?");
                 $stmt->execute([$category_name]);
                 $deleted_items = $stmt->rowCount();
-                
+
                 // Delete from food_menu table
                 $stmt = $pdo->prepare("DELETE FROM food_menu WHERE category = ?");
                 $stmt->execute([$category_name]);
                 $deleted_menu_entries = $stmt->rowCount();
-                
+
                 // Delete category PHP file
                 $page_path = '../../pages/' . $category_slug . '.php';
                 if (file_exists($page_path)) {
                     unlink($page_path);
                 }
-                
+
                 // Delete category assets files from main assets folder
                 $picture_file = '../../assets/' . $category_slug . '_pic.png';
                 $icon_file = '../../assets/' . $category_slug . '_icon.png';
-                
+
                 if (file_exists($picture_file)) {
                     unlink($picture_file);
                 }
                 if (file_exists($icon_file)) {
                     unlink($icon_file);
                 }
-                
+
                 // Delete category subfolder and its contents
                 $category_assets_folder = '../../assets/' . $category_slug;
                 if (file_exists($category_assets_folder)) {
                     // Recursively delete folder and contents
-                    function deleteDirectory($dir) {
+                    function deleteDirectory($dir)
+                    {
                         if (!file_exists($dir)) return true;
                         if (!is_dir($dir)) return unlink($dir);
                         foreach (scandir($dir) as $item) {
@@ -319,17 +328,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     deleteDirectory($category_assets_folder);
                 }
-                
+
                 $_SESSION['message'] = "Category '{$category_name}' and all its contents have been permanently deleted. ({$deleted_items} food items removed, {$deleted_menu_entries} menu entries removed)";
                 $_SESSION['message_type'] = 'success';
-                
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 $_SESSION['message'] = 'Error deleting category: ' . $e->getMessage();
                 $_SESSION['message_type'] = 'error';
             }
         }
     }
-    
+
     // Redirect to prevent form resubmission
     header('Location: ' . $_SERVER['PHP_SELF']);
     exit();
@@ -347,7 +355,7 @@ unset($_SESSION['message_type']);
 try {
     $stmt = $pdo->query("SELECT * FROM food_items ORDER BY category, name");
     $food_items = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $food_items = [];
 }
 
@@ -361,7 +369,7 @@ foreach ($food_items as $item) {
 try {
     $stmt = $pdo->query("SELECT category, description FROM food_menu ORDER BY category");
     $menu_categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $menu_categories = [];
 }
 
@@ -369,7 +377,7 @@ try {
 try {
     $stmt = $pdo->query("SELECT DISTINCT category FROM food_items ORDER BY category");
     $db_categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     $db_categories = [];
 }
 
@@ -385,31 +393,32 @@ $display_categories = $menu_category_names;
 sort($display_categories);
 
 // Function to convert any image format to PNG
-function convertImageToPNG($source_path, $destination_path) {
+function convertImageToPNG($source_path, $destination_path)
+{
     // Check if source file exists
     if (!file_exists($source_path)) {
         error_log("convertImageToPNG: Source file does not exist: $source_path");
         return false;
     }
-    
+
     // Check if destination directory exists and is writable
     $dest_dir = dirname($destination_path);
     if (!is_dir($dest_dir)) {
         error_log("convertImageToPNG: Destination directory does not exist: $dest_dir");
         return false;
     }
-    
+
     if (!is_writable($dest_dir)) {
         error_log("convertImageToPNG: Destination directory is not writable: $dest_dir");
         return false;
     }
-    
+
     // Check if GD extension is available
     if (!extension_loaded('gd')) {
         error_log("convertImageToPNG: GD extension not available, using fallback");
         // If GD is not available, just copy the file and rename it to .png
         // This is a fallback solution
-        
+
         // Get file extension from the original filename, not the temp file
         $file_extension = '';
         if (isset($_FILES['category_picture']['name'])) {
@@ -421,7 +430,7 @@ function convertImageToPNG($source_path, $destination_path) {
             $finfo = finfo_open(FILEINFO_MIME_TYPE);
             $mime_type = finfo_file($finfo, $source_path);
             finfo_close($finfo);
-            
+
             switch ($mime_type) {
                 case 'image/jpeg':
                     $file_extension = 'jpg';
@@ -442,9 +451,9 @@ function convertImageToPNG($source_path, $destination_path) {
                     $file_extension = 'jpg'; // Default fallback
             }
         }
-        
+
         error_log("convertImageToPNG: Detected file extension: $file_extension");
-        
+
         // Try to copy the file regardless of extension
         // The browser will handle the image display based on content, not extension
         $result = copy($source_path, $destination_path);
@@ -456,17 +465,17 @@ function convertImageToPNG($source_path, $destination_path) {
         }
         return $result;
     }
-    
+
     // Get image info
     $image_info = getimagesize($source_path);
     if (!$image_info) {
         error_log("convertImageToPNG: getimagesize failed for: $source_path");
         return false;
     }
-    
+
     $mime_type = $image_info['mime'];
     error_log("convertImageToPNG: Processing image with MIME type: $mime_type");
-    
+
     // Create image resource based on MIME type
     $image = null;
     switch ($mime_type) {
@@ -499,29 +508,30 @@ function convertImageToPNG($source_path, $destination_path) {
             error_log("convertImageToPNG: Unsupported MIME type: $mime_type");
             return false;
     }
-    
+
     if (!$image) {
         error_log("convertImageToPNG: Failed to create image resource from: $source_path");
         return false;
     }
-    
+
     // Convert to PNG
     $result = imagepng($image, $destination_path, 9); // 9 = highest compression
-    
+
     // Clean up memory
     imagedestroy($image);
-    
+
     if ($result) {
         error_log("convertImageToPNG: Successfully converted and saved to: $destination_path");
     } else {
         error_log("convertImageToPNG: Failed to save PNG to: $destination_path");
     }
-    
+
     return $result;
 }
 
 // Function to create category page
-function createCategoryPage($category_slug, $category_name, $category_description, $category_picture, $category_icon) {
+function createCategoryPage($category_slug, $category_name, $category_description, $category_picture, $category_icon)
+{
     $page_content = '<?php
 // Page configuration
 $page_title = \'' . addslashes($category_name) . ' Menu\';
@@ -533,7 +543,7 @@ $food_category = \'' . addslashes($category_name) . '\';
 // Include the food page template
 include \'../components/food_page_template.php\';
 ?>';
-    
+
     // Write the page to pages directory as PHP file
     $page_path = '../../pages/' . $category_slug . '.php';
     file_put_contents($page_path, $page_content);
@@ -542,12 +552,14 @@ include \'../components/food_page_template.php\';
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Food - HungryHub Admin</title>
     <link rel="stylesheet" href="../cssAdmin/manage-food.css?v=<?php echo time(); ?>&force=1">
 </head>
+
 <body>
     <div class="header">
         <h1>Manage Food Items</h1>
@@ -561,7 +573,7 @@ include \'../components/food_page_template.php\';
             <a href="logout.php">Logout</a>
         </div>
     </div>
-    
+
     <div class="container">
         <div class="page-header">
             <h2>Food Menu Management</h2>
@@ -570,13 +582,13 @@ include \'../components/food_page_template.php\';
                 <a href="#" class="add-menu-btn" onclick="openCategoryModal()">+ Add New Food Menu</a>
             </div>
         </div>
-        
+
         <?php if ($message): ?>
             <div class="message <?php echo $message_type; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
+
         <!-- Filter System -->
         <div class="filter-section">
             <div class="filter-header">
@@ -589,7 +601,7 @@ include \'../components/food_page_template.php\';
                     <input type="text" id="searchInput" placeholder="Enter food item name..." onkeyup="filterFoodItems()">
                     <div id="resultsCount" class="results-count">Showing 69 food item(s)</div>
                 </div>
-                
+
                 <div class="filter-group">
                     <label for="categoryFilter">Filter by Category:</label>
                     <select id="categoryFilter" onchange="filterFoodItems()">
@@ -599,7 +611,7 @@ include \'../components/food_page_template.php\';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
                     <label for="priceRange">Price Range (৳):</label>
                     <div class="price-range">
@@ -608,7 +620,7 @@ include \'../components/food_page_template.php\';
                         <input type="number" id="maxPrice" placeholder="Max" onchange="filterFoodItems()">
                     </div>
                 </div>
-                
+
                 <div class="filter-group">
                     <label for="sortBy">Sort by:</label>
                     <select id="sortBy" onchange="filterFoodItems()">
@@ -624,20 +636,20 @@ include \'../components/food_page_template.php\';
                 <button class="btn btn-primary" onclick="filterFoodItems()">Apply Filter</button>
             </div>
         </div>
-        
+
         <?php if (empty($display_categories)): ?>
             <div class="message error">
                 No food categories found. Please create a new food menu category.
             </div>
         <?php else: ?>
-            <?php 
+            <?php
             // Create a lookup array for menu category descriptions
             $menu_descriptions = [];
             foreach ($menu_categories as $menu_cat) {
                 $menu_descriptions[$menu_cat['category']] = $menu_cat['description'];
             }
-            
-            foreach ($display_categories as $category): 
+
+            foreach ($display_categories as $category):
                 $category_description = $menu_descriptions[$category] ?? '';
             ?>
                 <div class="category-section" data-category="<?php echo htmlspecialchars($category); ?>">
@@ -656,18 +668,18 @@ include \'../components/food_page_template.php\';
                     <div class="food-grid">
                         <?php if (isset($categorized_items[$category]) && !empty($categorized_items[$category])): ?>
                             <?php foreach ($categorized_items[$category] as $item): ?>
-                            <div class="food-item" data-name="<?php echo htmlspecialchars(strtolower($item['name'])); ?>" data-category="<?php echo htmlspecialchars($item['category']); ?>" data-price="<?php echo $item['price']; ?>">
-                                <img src="<?php echo (strpos($item['image'], 'http') === 0) ? htmlspecialchars($item['image']) : '../../' . htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="food-image">
-                                <div class="food-details">
-                                    <div class="food-name"><?php echo htmlspecialchars($item['name']); ?></div>
-                                    <div class="food-price"><span class="currency-symbol">৳</span><?php echo number_format($item['price']); ?></div>
-                                    <div class="food-description"><?php echo htmlspecialchars($item['description']); ?></div>
-                                    <div class="food-actions">
-                                        <a href="#" class="btn btn-edit" onclick="openModal('edit', null, <?php echo htmlspecialchars(json_encode($item)); ?>)">Edit</a>
-                                        <a href="#" class="btn btn-delete" onclick="deleteItem(<?php echo $item['id']; ?>)">Delete</a>
+                                <div class="food-item" data-name="<?php echo htmlspecialchars(strtolower($item['name'])); ?>" data-category="<?php echo htmlspecialchars($item['category']); ?>" data-price="<?php echo $item['price']; ?>">
+                                    <img src="<?php echo (strpos($item['image'], 'http') === 0) ? htmlspecialchars($item['image']) : '../../' . htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="food-image">
+                                    <div class="food-details">
+                                        <div class="food-name"><?php echo htmlspecialchars($item['name']); ?></div>
+                                        <div class="food-price"><span class="currency-symbol">৳</span><?php echo number_format($item['price']); ?></div>
+                                        <div class="food-description"><?php echo htmlspecialchars($item['description']); ?></div>
+                                        <div class="food-actions">
+                                            <a href="#" class="btn btn-edit" onclick="openModal('edit', null, <?php echo htmlspecialchars(json_encode($item)); ?>)">Edit</a>
+                                            <a href="#" class="btn btn-delete" onclick="deleteItem(<?php echo $item['id']; ?>)">Delete</a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <div class="empty-category">
@@ -686,7 +698,7 @@ include \'../components/food_page_template.php\';
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-    
+
     <!-- Modal for Add/Edit -->
     <div id="foodModal" class="modal">
         <div class="modal-content">
@@ -694,13 +706,13 @@ include \'../components/food_page_template.php\';
             <form id="foodForm" method="POST">
                 <input type="hidden" name="action" id="formAction" value="add">
                 <input type="hidden" name="id" id="formId" value="">
-                
+
                 <div class="form-content">
                     <div class="form-group">
                         <label for="name">Food Name:</label>
                         <input type="text" id="name" name="name" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category">Category:</label>
                         <select id="category" name="category" required>
@@ -710,17 +722,17 @@ include \'../components/food_page_template.php\';
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="price">Price (৳):</label>
                         <input type="number" id="price" name="price" step="0.01" min="0" required>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="description">Description:</label>
                         <textarea id="description" name="description" rows="3"></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="image">Image:</label>
                         <div class="image-upload-container">
@@ -734,7 +746,7 @@ include \'../components/food_page_template.php\';
                                     <span>Use URL</span>
                                 </label>
                             </div>
-                            
+
                             <div id="upload_section" class="upload-section" style="display: none;">
                                 <input type="file" id="image_file" name="image_file" accept="image/*" class="file-input">
                                 <label for="image_file" class="file-label">
@@ -749,7 +761,7 @@ include \'../components/food_page_template.php\';
                                     <span class="progress-text">Uploading...</span>
                                 </div>
                             </div>
-                            
+
                             <div id="url_section" class="url-section">
                                 <input type="text" id="image" name="image" placeholder="assets/cake/chocolate_fudge.jpg or https://example.com/image.jpg">
                                 <small class="form-help">Use relative path (e.g., assets/cake/image.jpg) or full URL</small>
@@ -757,7 +769,7 @@ include \'../components/food_page_template.php\';
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
@@ -765,39 +777,39 @@ include \'../components/food_page_template.php\';
             </form>
         </div>
     </div>
-    
+
     <!-- Modal for Add New Food Menu/Category -->
     <div id="categoryModal" class="modal">
         <div class="modal-content">
             <h3>Add New Food Menu</h3>
             <form id="categoryForm" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="action" value="add_category">
-                
+
                 <div class="form-content">
                     <div class="form-group">
                         <label for="category_name">Category Name:</label>
                         <input type="text" id="category_name" name="category_name" required placeholder="e.g., Pasta, Pizza, Burgers">
                         <small class="form-help">This will be the name of your food category page</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category_description">Category Description:</label>
                         <textarea id="category_description" name="category_description" rows="3" required placeholder="Describe this food category..."></textarea>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category_picture">Category Picture:</label>
                         <input type="file" id="category_picture" name="category_picture" accept="image/*" required>
                         <small class="form-help">Main image for the category page (recommended: 800x600px) - Will be converted to PNG format</small>
                     </div>
-                    
+
                     <div class="form-group">
                         <label for="category_icon">Category Icon:</label>
                         <input type="file" id="category_icon" name="category_icon" accept="image/*" required>
                         <small class="form-help">Small icon for navigation (recommended: 64x64px) - Will be converted to PNG format</small>
                     </div>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Food Menu</button>
@@ -805,7 +817,7 @@ include \'../components/food_page_template.php\';
             </form>
         </div>
     </div>
-    
+
     <!-- Modal for Delete Category Confirmation -->
     <div id="deleteCategoryModal" class="modal">
         <div class="modal-content">
@@ -825,17 +837,17 @@ include \'../components/food_page_template.php\';
                     </ul>
                 </div>
             </div>
-            
+
             <form id="deleteCategoryForm" method="POST">
                 <input type="hidden" name="action" value="delete_category">
                 <input type="hidden" name="category_name" id="deleteCategoryName" value="">
-                
+
                 <div class="form-group">
                     <label for="confirmText">To confirm deletion, type <strong>"confirm"</strong> in the box below:</label>
                     <input type="text" id="confirmText" name="confirm_text" placeholder="Type 'confirm' here" required>
                     <small class="form-help">This helps prevent accidental deletions</small>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeDeleteCategoryModal()">Cancel</button>
                     <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete Category Permanently</button>
@@ -843,7 +855,7 @@ include \'../components/food_page_template.php\';
             </form>
         </div>
     </div>
-    
+
     <script>
         function openModal(action, category = null, item = null) {
             const modal = document.getElementById('foodModal');
@@ -851,7 +863,7 @@ include \'../components/food_page_template.php\';
             const title = document.getElementById('modalTitle');
             const formAction = document.getElementById('formAction');
             const formId = document.getElementById('formId');
-            
+
             if (action === 'add') {
                 title.textContent = 'Add Food Item';
                 formAction.value = 'add';
@@ -876,19 +888,19 @@ include \'../components/food_page_template.php\';
                 document.getElementById('image_url_radio').checked = true;
                 toggleImageInput();
             }
-            
+
             modal.style.display = 'block';
             // Ensure modal is visible and scrollable
             modal.scrollTop = 0;
             document.body.style.overflow = 'hidden';
         }
-        
+
         function toggleImageInput() {
             const uploadRadio = document.getElementById('image_upload_radio');
             const urlRadio = document.getElementById('image_url_radio');
             const uploadSection = document.getElementById('upload_section');
             const urlSection = document.getElementById('url_section');
-            
+
             if (uploadRadio.checked) {
                 uploadSection.style.display = 'block';
                 urlSection.style.display = 'none';
@@ -897,75 +909,75 @@ include \'../components/food_page_template.php\';
                 urlSection.style.display = 'block';
             }
         }
-        
+
         function uploadImage() {
             const fileInput = document.getElementById('image_file');
             const category = document.getElementById('category').value;
             const progressDiv = document.getElementById('upload_progress');
             const imageUrlInput = document.getElementById('image');
-            
+
             if (!fileInput.files[0]) {
                 showNotification('Please select a file to upload', 'warning');
                 return;
             }
-            
+
             if (!category) {
                 showNotification('Please select a category first', 'warning');
                 return;
             }
-            
+
             const formData = new FormData();
             formData.append('image', fileInput.files[0]);
             formData.append('category', category);
-            
+
             // Show progress
             progressDiv.style.display = 'block';
-            
+
             fetch('upload_handler.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                progressDiv.style.display = 'none';
-                
-                if (data.success) {
-                    // Set the uploaded file path to the URL input
-                    imageUrlInput.value = data.file_path;
-                    // Switch to URL mode
-                    document.getElementById('image_url_radio').checked = true;
-                    toggleImageInput();
-                    showNotification('Image uploaded successfully!', 'success');
-                } else {
-                    showNotification('Upload failed: ' + data.message, 'error');
-                }
-            })
-            .catch(error => {
-                progressDiv.style.display = 'none';
-                showNotification('Upload failed: ' + error.message, 'error');
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    progressDiv.style.display = 'none';
+
+                    if (data.success) {
+                        // Set the uploaded file path to the URL input
+                        imageUrlInput.value = data.file_path;
+                        // Switch to URL mode
+                        document.getElementById('image_url_radio').checked = true;
+                        toggleImageInput();
+                        showNotification('Image uploaded successfully!', 'success');
+                    } else {
+                        showNotification('Upload failed: ' + data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    progressDiv.style.display = 'none';
+                    showNotification('Upload failed: ' + error.message, 'error');
+                });
         }
-        
+
         function closeModal() {
             document.getElementById('foodModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
+
         function openCategoryModal() {
             const modal = document.getElementById('categoryModal');
             const form = document.getElementById('categoryForm');
-            
+
             form.reset();
             modal.style.display = 'block';
             modal.scrollTop = 0;
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeCategoryModal() {
             document.getElementById('categoryModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
+
         function openDeleteCategoryModal(categoryName) {
             const modal = document.getElementById('deleteCategoryModal');
             const categoryToDelete = document.getElementById('categoryToDelete');
@@ -973,28 +985,28 @@ include \'../components/food_page_template.php\';
             const deleteCategoryName = document.getElementById('deleteCategoryName');
             const confirmText = document.getElementById('confirmText');
             const confirmBtn = document.getElementById('confirmDeleteBtn');
-            
+
             // Set category name
             categoryToDelete.textContent = categoryName;
             categoryPageName.textContent = categoryName.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
             deleteCategoryName.value = categoryName;
-            
+
             // Reset form
             confirmText.value = '';
             confirmText.classList.remove('valid', 'invalid');
             confirmBtn.disabled = true;
-            
+
             // Show modal
             modal.style.display = 'block';
             modal.scrollTop = 0;
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeDeleteCategoryModal() {
             document.getElementById('deleteCategoryModal').style.display = 'none';
             document.body.style.overflow = 'auto';
         }
-        
+
         function deleteItem(id) {
             // Create a custom confirmation modal instead of browser alert
             const confirmModal = document.createElement('div');
@@ -1021,7 +1033,7 @@ include \'../components/food_page_template.php\';
             document.body.appendChild(confirmModal);
             document.body.style.overflow = 'hidden';
         }
-        
+
         function closeDeleteConfirm() {
             const modal = document.querySelector('.modal:last-of-type');
             if (modal) {
@@ -1029,11 +1041,11 @@ include \'../components/food_page_template.php\';
                 document.body.style.overflow = 'auto';
             }
         }
-        
+
         function confirmDeleteItem(id) {
             closeDeleteConfirm();
             showNotification('Deleting food item...', 'info', 2000);
-            
+
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = `
@@ -1043,7 +1055,7 @@ include \'../components/food_page_template.php\';
             document.body.appendChild(form);
             form.submit();
         }
-        
+
         // Close modal when clicking outside
         window.onclick = function(event) {
             const foodModal = document.getElementById('foodModal');
@@ -1057,12 +1069,12 @@ include \'../components/food_page_template.php\';
                 closeDeleteCategoryModal();
             }
         }
-        
+
         // Add event listeners for radio buttons
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('image_upload_radio').addEventListener('change', toggleImageInput);
             document.getElementById('image_url_radio').addEventListener('change', toggleImageInput);
-            
+
             // File input change handler
             document.getElementById('image_file').addEventListener('change', function(e) {
                 const file = e.target.files[0];
@@ -1071,16 +1083,16 @@ include \'../components/food_page_template.php\';
                     label.textContent = file.name;
                 }
             });
-            
+
             // Delete confirmation text handler
             document.getElementById('confirmText').addEventListener('input', function(e) {
                 const confirmBtn = document.getElementById('confirmDeleteBtn');
                 const input = e.target;
                 const value = input.value.toLowerCase().trim();
-                
+
                 // Remove existing classes
                 input.classList.remove('valid', 'invalid');
-                
+
                 if (value === 'confirm') {
                     confirmBtn.disabled = false;
                     input.classList.add('valid');
@@ -1091,17 +1103,19 @@ include \'../components/food_page_template.php\';
                     confirmBtn.disabled = true;
                 }
             });
-            
+
             // AJAX form submission
             document.getElementById('foodForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 submitFoodForm();
             });
-            
+
             // On load, clear any previously saved filter state so refresh shows defaults
-            try { localStorage.removeItem('foodFilterState'); } catch (e) {}
+            try {
+                localStorage.removeItem('foodFilterState');
+            } catch (e) {}
         });
-        
+
         // Filter System Functions
         function filterFoodItems() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -1109,34 +1123,34 @@ include \'../components/food_page_template.php\';
             const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
             const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
             const sortBy = document.getElementById('sortBy').value;
-            
+
             const foodItems = document.querySelectorAll('.food-item');
             const categorySections = document.querySelectorAll('.category-section');
             let visibleItems = [];
-            
+
             // Filter and collect visible items
             foodItems.forEach(item => {
                 const name = item.getAttribute('data-name');
                 const category = item.getAttribute('data-category');
                 const price = parseFloat(item.getAttribute('data-price'));
-                
+
                 let showItem = true;
-                
+
                 // Search filter
                 if (searchTerm && !name.includes(searchTerm)) {
                     showItem = false;
                 }
-                
+
                 // Category filter
                 if (categoryFilter && category !== categoryFilter) {
                     showItem = false;
                 }
-                
+
                 // Price range filter
                 if (price < minPrice || price > maxPrice) {
                     showItem = false;
                 }
-                
+
                 if (showItem) {
                     item.style.display = 'block';
                     visibleItems.push({
@@ -1149,7 +1163,7 @@ include \'../components/food_page_template.php\';
                     item.style.display = 'none';
                 }
             });
-            
+
             // Sort visible items
             visibleItems.sort((a, b) => {
                 switch (sortBy) {
@@ -1167,14 +1181,14 @@ include \'../components/food_page_template.php\';
                         return 0;
                 }
             });
-            
+
             // Reorder items in DOM
             visibleItems.forEach((item, index) => {
                 const categorySection = item.element.closest('.category-section');
                 const foodGrid = categorySection.querySelector('.food-grid');
                 foodGrid.appendChild(item.element);
             });
-            
+
             // Show only the selected category section (if any)
             if (categoryFilter) {
                 categorySections.forEach(section => {
@@ -1187,94 +1201,96 @@ include \'../components/food_page_template.php\';
                     section.style.display = 'block';
                 });
             }
-            
+
             // Update results count
             updateResultsCount(visibleItems.length);
         }
-        
+
         function clearFilters() {
             document.getElementById('searchInput').value = '';
             document.getElementById('categoryFilter').value = '';
             document.getElementById('minPrice').value = '';
             document.getElementById('maxPrice').value = '';
             document.getElementById('sortBy').value = 'name-asc';
-            
+
             // Show all items
             const foodItems = document.querySelectorAll('.food-item');
             const categorySections = document.querySelectorAll('.category-section');
-            
+
             foodItems.forEach(item => {
                 item.style.display = 'block';
             });
-            
+
             categorySections.forEach(section => {
                 section.style.display = 'block';
             });
-            
+
             updateResultsCount(foodItems.length);
             // Ensure any persisted state is removed; no need to click Apply
-            try { localStorage.removeItem('foodFilterState'); } catch (e) {}
+            try {
+                localStorage.removeItem('foodFilterState');
+            } catch (e) {}
         }
-        
+
         function updateResultsCount(count) {
             let resultsDiv = document.getElementById('resultsCount');
             if (resultsDiv) {
                 resultsDiv.textContent = `Showing ${count} food item(s)`;
             }
         }
-        
+
         // AJAX Form Submission
         function submitFoodForm() {
             const form = document.getElementById('foodForm');
             const formData = new FormData(form);
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
-            
+
             // Show loading state
             submitBtn.disabled = true;
             submitBtn.textContent = 'Saving...';
-            
+
             fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(data => {
-                // Parse the response to check for success/error
-                if (data.includes('successfully')) {
-                    showNotification('Food item saved successfully!', 'success');
-                    closeModal();
-                    // Reload the page content without full page reload
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
-                } else {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    // Parse the response to check for success/error
+                    if (data.includes('successfully')) {
+                        showNotification('Food item saved successfully!', 'success');
+                        closeModal();
+                        // Reload the page content without full page reload
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showNotification('Error saving food item. Please try again.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     showNotification('Error saving food item. Please try again.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error saving food item. Please try again.', 'error');
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            });
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                });
         }
-        
+
         // Professional Notification System
         function showNotification(message, type = 'info', duration = 4000) {
             // Remove existing notifications
             const existingNotifications = document.querySelectorAll('.notification');
             existingNotifications.forEach(notification => notification.remove());
-            
+
             const notification = document.createElement('div');
             notification.className = `notification notification-${type}`;
-            
+
             // Get appropriate icon and colors
             let icon, bgColor, textColor, borderColor;
-            switch(type) {
+            switch (type) {
                 case 'success':
                     icon = 'fa-check-circle';
                     bgColor = '#f0fff4';
@@ -1301,7 +1317,7 @@ include \'../components/food_page_template.php\';
                     borderColor = '#3182ce';
                     break;
             }
-            
+
             notification.innerHTML = `
                 <div class="notification-content">
                     <div class="notification-icon">
@@ -1317,25 +1333,25 @@ include \'../components/food_page_template.php\';
                 </div>
                 <div class="notification-progress"></div>
             `;
-            
+
             // Apply dynamic colors
             notification.style.setProperty('--bg-color', bgColor);
             notification.style.setProperty('--text-color', textColor);
             notification.style.setProperty('--border-color', borderColor);
-            
+
             document.body.appendChild(notification);
-            
+
             // Animate in
             setTimeout(() => {
                 notification.classList.add('notification-show');
             }, 10);
-            
+
             // Auto remove after specified duration
             setTimeout(() => {
                 closeNotification(notification.querySelector('.notification-close'));
             }, duration);
         }
-        
+
         function closeNotification(closeBtn) {
             const notification = closeBtn.closest('.notification');
             if (notification) {
@@ -1347,7 +1363,7 @@ include \'../components/food_page_template.php\';
                 }, 300);
             }
         }
-        
+
         // Preserve filter state
         function saveFilterState() {
             const filterState = {
@@ -1359,9 +1375,10 @@ include \'../components/food_page_template.php\';
             };
             // No-op: do not persist filters across reloads
         }
-        
-        function loadFilterState() { /* disabled: do not reload saved filters */ }
-        
+
+        function loadFilterState() {
+            /* disabled: do not reload saved filters */ }
+
         // Save filter state on change
         function setupFilterStateSaving() {
             const filterInputs = ['searchInput', 'categoryFilter', 'minPrice', 'maxPrice', 'sortBy'];
@@ -1369,10 +1386,13 @@ include \'../components/food_page_template.php\';
                 const input = document.getElementById(inputId);
                 if (input) {
                     // No persistence; optionally still update UI immediately on Enter
-                    input.addEventListener('keyup', function(e){ if (e.key === 'Enter') filterFoodItems(); });
+                    input.addEventListener('keyup', function(e) {
+                        if (e.key === 'Enter') filterFoodItems();
+                    });
                 }
             });
         }
     </script>
 </body>
+
 </html>

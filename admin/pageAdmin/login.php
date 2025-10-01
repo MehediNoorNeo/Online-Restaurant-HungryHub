@@ -10,7 +10,7 @@ $password = '';
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch(PDOException $e) {
+} catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());
 }
 
@@ -25,13 +25,13 @@ $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'] ?? '';
     $password = $_POST['password'] ?? '';
-    
+
     try {
         // Check admin credentials in database
         $stmt = $pdo->prepare("SELECT id, username, password FROM admin_users WHERE username = ?");
         $stmt->execute([$username]);
         $admin = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if ($admin) {
             // Check if password is already hashed or plain text
             if (password_get_info($admin['password'])['algo'] !== null) {
@@ -54,9 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
         }
-        
+
         $error_message = 'Invalid username or password';
-    } catch(PDOException $e) {
+    } catch (PDOException $e) {
         $error_message = 'Login error. Please try again.';
     }
 }
@@ -64,39 +64,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - HungryHub</title>
     <link rel="stylesheet" href="../cssAdmin/login.css?v=<?php echo time(); ?>">
 </head>
+
 <body>
     <div class="login-container">
         <div class="login-header">
             <h1>Admin Login</h1>
             <p>HungryHub Management System</p>
         </div>
-        
+
         <?php if ($error_message): ?>
             <div class="error-message">
                 <?php echo htmlspecialchars($error_message); ?>
             </div>
         <?php endif; ?>
-        
+
         <form method="POST" action="">
             <div class="form-group">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            
+
             <button type="submit" class="login-btn">Login</button>
         </form>
-        
+
     </div>
 </body>
+
 </html>
