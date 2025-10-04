@@ -273,6 +273,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['message_type'] = 'error';
             }
         }
+    } elseif ($action === 'edit_category') {
+        $category_name = $_POST['category_name'] ?? '';
+        $category_description = $_POST['category_description'] ?? '';
+        $old_category_name = $_POST['old_category_name'] ?? '';
+
+        // Validate category name (remove spaces, special chars)
+        $category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $category_name));
+        $old_category_slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $old_category_name));
+
+        if (empty($category_slug)) {
+            $_SESSION['message'] = 'Invalid category name. Please use only letters and numbers.';
+            $_SESSION['message_type'] = 'error';
+        } else {
+            try {
+                // Get existing category data to find old files
+                $stmt = $pdo->prepare("SELECT category, description FROM food_menu WHERE category = ?");
+                $stmt->execute([$old_category_name]);
+                $existing_category = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if (!$existing_category) {
+                    throw new Exception("Category not found: $old_category_name");
+                }
+
+                // Initialize file paths
+                $old_picture_file = '../../assets/' . $old_category_slug . '_pic.png';
+                $old_icon_file = '../../assets/' . $old_category_slug . '_icon.png';
+
+                // Handle new file uploads
+                $category_picture = '';
+                $category_icon = '';
+
+                // Upload new category picture (convert to PNG)
+                if (isset($_FILES['category_picture']) && $_FILES['category_picture']['error'] === 0) {
+                    // Delete old picture file if it exists
+                    if (file_exists($old_picture_file)) {
+                        unlink($old_picture_file);
+                        error_log("Deleted old category picture: $old_picture_file");
+                    }
+                    
+                    $picture_name = $category_slug . '_pic.png';
+                    $main_picture_path = '../../assets/' . $picture_name;
+
+                    if (convertImageToPNG($_FILES['category_picture']['tmp_name'], $main_picture_path)) {
+                        $category_picture = 'assets/' . $picture_name;
+                        error_log("New category picture uploaded: $category_picture");
+                    } else {
+                        throw new Exception("Failed to convert and save category picture");
+                    }
+                } else {
+                    // Keep existing picture if no new one uploaded, but rename it if category name changed
+                    if ($old_category_slug !== $category_slug) {
+                        $old_picture_path = '../../assets/' . $old_category_slug . '_pic.png';
+                        $new_picture_path = '../../assets/' . $category_slug . '_pic.png';
+                        if (file_exists($old_picture_path)) {
+                            rename($old_picture_path, $new_picture_path);
+                        }
+                    }
+                    $category_picture = 'assets/' . $category_slug . '_pic.png';
+                }
+
+                // Upload new category icon (convert to PNG)
+                if (isset($_FILES['category_icon']) && $_FILES['category_icon']['error'] === 0) {
+                    // Delete old icon file if it exists
+                    if (file_exists($old_icon_file)) {
+                        unlink($old_icon_file);
+                        error_log("Deleted old category icon: $old_icon_file");
+                    }
+                    
+                    $icon_name = $category_slug . '_icon.png';
+                    $main_icon_path = '../../assets/' . $icon_name;
+
+                    if (convertImageToPNG($_FILES['category_icon']['tmp_name'], $main_icon_path)) {
+                        $category_icon = 'assets/' . $icon_name;
+                        error_log("New category icon uploaded: $category_icon");
+                    } else {
+                        throw new Exception("Failed to convert and save category icon");
+                    }
+                } else {
+                    // Keep existing icon if no new one uploaded, but rename it if category name changed
+                    if ($old_category_slug !== $category_slug) {
+                        $old_icon_path = '../../assets/' . $old_category_slug . '_icon.png';
+                        $new_icon_path = '../../assets/' . $category_slug . '_icon.png';
+                        if (file_exists($old_icon_path)) {
+                            rename($old_icon_path, $new_icon_path);
+                        }
+                    }
+                    $category_icon = 'assets/' . $category_slug . '_icon.png';
+                }
+
+                // Update category in food_menu table
+                $stmt = $pdo->prepare("UPDATE food_menu SET category = ?, description = ? WHERE category = ?");
+                $stmt->execute([$category_name, $category_description, $old_category_name]);
+
+                // Update all food items in this category
+                $stmt = $pdo->prepare("UPDATE food_items SET category = ? WHERE category = ?");
+                $stmt->execute([$category_name, $old_category_name]);
+
+                // If category name changed, rename the PHP file
+                if ($old_category_slug !== $category_slug) {
+                    $old_page_path = '../../pages/' . $old_category_slug . '.php';
+                    $new_page_path = '../../pages/' . $category_slug . '.php';
+                    
+                    if (file_exists($old_page_path)) {
+                        rename($old_page_path, $new_page_path);
+                    }
+                }
+                
+                // Always update the category page content with correct file paths
+                createCategoryPage($category_slug, $category_name, $category_description, $category_picture, $category_icon);
+
+                $_SESSION['message'] = "Category '{$category_name}' updated successfully!";
+                $_SESSION['message_type'] = 'success';
+            } catch (Exception $e) {
+                $_SESSION['message'] = 'Error updating category: ' . $e->getMessage();
+                $_SESSION['message_type'] = 'error';
+            }
+        }
     } elseif ($action === 'delete_category') {
         $category_name = $_POST['category_name'] ?? '';
         $confirm_text = $_POST['confirm_text'] ?? '';
@@ -662,6 +779,7 @@ include \'../components/food_page_template.php\';
                         </div>
                         <div class="category-actions">
                             <a href="#" class="add-category-btn" onclick="openModal('add', '<?php echo $category; ?>')">+ Add to <?php echo $category; ?></a>
+                            <a href="#" class="edit-category-btn" onclick="openEditCategoryModal('<?php echo $category; ?>', '<?php echo htmlspecialchars($category_description); ?>')">Edit Category</a>
                             <a href="#" class="delete-category-btn" onclick="openDeleteCategoryModal('<?php echo $category; ?>')">Delete Category</a>
                         </div>
                     </div>
@@ -813,6 +931,47 @@ include \'../components/food_page_template.php\';
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Food Menu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Edit Category -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Food Menu</h3>
+            <form id="editCategoryForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="edit_category">
+                <input type="hidden" name="old_category_name" id="editOldCategoryName" value="">
+
+                <div class="form-content">
+                    <div class="form-group">
+                        <label for="edit_category_name">Category Name:</label>
+                        <input type="text" id="edit_category_name" name="category_name" required placeholder="e.g., Pasta, Pizza, Burgers">
+                        <small class="form-help">This will be the name of your food category page</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_category_description">Category Description:</label>
+                        <textarea id="edit_category_description" name="category_description" rows="3" required placeholder="Describe this food category..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_category_picture">Category Picture:</label>
+                        <input type="file" id="edit_category_picture" name="category_picture" accept="image/*">
+                        <small class="form-help">Main image for the category page (recommended: 800x600px) - Will be converted to PNG format. Leave empty to keep current picture.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_category_icon">Category Icon:</label>
+                        <input type="file" id="edit_category_icon" name="category_icon" accept="image/*">
+                        <small class="form-help">Small icon for navigation (recommended: 64x64px) - Will be converted to PNG format. Leave empty to keep current icon.</small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditCategoryModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Food Menu</button>
                 </div>
             </form>
         </div>
@@ -978,6 +1137,32 @@ include \'../components/food_page_template.php\';
             document.body.style.overflow = 'auto';
         }
 
+        function openEditCategoryModal(categoryName, categoryDescription) {
+            const modal = document.getElementById('editCategoryModal');
+            const form = document.getElementById('editCategoryForm');
+            const oldCategoryName = document.getElementById('editOldCategoryName');
+            const categoryNameInput = document.getElementById('edit_category_name');
+            const categoryDescriptionInput = document.getElementById('edit_category_description');
+
+            // Set form values
+            oldCategoryName.value = categoryName;
+            categoryNameInput.value = categoryName;
+            categoryDescriptionInput.value = categoryDescription || '';
+
+            // Reset file inputs
+            document.getElementById('edit_category_picture').value = '';
+            document.getElementById('edit_category_icon').value = '';
+
+            modal.style.display = 'block';
+            modal.scrollTop = 0;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
         function openDeleteCategoryModal(categoryName) {
             const modal = document.getElementById('deleteCategoryModal');
             const categoryToDelete = document.getElementById('categoryToDelete');
@@ -1060,11 +1245,14 @@ include \'../components/food_page_template.php\';
         window.onclick = function(event) {
             const foodModal = document.getElementById('foodModal');
             const categoryModal = document.getElementById('categoryModal');
+            const editCategoryModal = document.getElementById('editCategoryModal');
             const deleteCategoryModal = document.getElementById('deleteCategoryModal');
             if (event.target === foodModal) {
                 closeModal();
             } else if (event.target === categoryModal) {
                 closeCategoryModal();
+            } else if (event.target === editCategoryModal) {
+                closeEditCategoryModal();
             } else if (event.target === deleteCategoryModal) {
                 closeDeleteCategoryModal();
             }
