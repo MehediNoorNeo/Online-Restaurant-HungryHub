@@ -28,6 +28,9 @@ function initializeCheckout() {
     // Initialize progress indicator
     initializeProgressIndicator();
     
+    // Initialize payment method icon behavior
+    initializePaymentMethodIcon();
+    
     // Listen for cart updates from localStorage
     window.addEventListener('storage', async function(e) {
         if (e.key === 'hungryHubCart') {
@@ -285,23 +288,18 @@ async function loadCartItemsInSummary() {
             const imagePath = `../${foodItem.imagePath}`;
             
             cartHTML += `
-                <div class="cart-item" data-item-name="${itemName}">
-                    <img src="${imagePath}" alt="${foodItem.name}" class="cart-item-image" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0MFY0MEgyMFYyMFoiIGZpbGw9IiNEREQiLz4KPHBhdGggZD0iTTI1IDI1SDM1VjM1SDI1VjI1WiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K'">
-                    <div class="cart-item-details">
-                        <div class="cart-item-name">${foodItem.name}</div>
-                        <div class="cart-item-category">${foodItem.category}</div>
-                        <div class="cart-item-price">
-                            <span class="currency-symbol">৳</span> ${foodItem.price.toFixed(2)}
-                        </div>
+                <div class="summary-item" data-item-name="${itemName}">
+                  <div class="summary-item-left">
+                    <img src="${imagePath}" alt="${foodItem.name}" class="summary-thumb" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMCAyMEg0MFY0MEgyMFYyMFoiIGZpbGw9IiNEREQiLz4KPHBhdGggZD0iTTI1IDI1SDM1VjM1SDI1VjI1WiIgZmlsbD0iI0NDQyIvPgo8L3N2Zz4K'">
+                    <div class="summary-text">
+                      <div class="summary-name">${foodItem.name}</div>
+                      <div class="summary-cat">${foodItem.category}</div>
                     </div>
-                    <div class="cart-item-controls">
-                        <div class="quantity-control">
-                            <span class="quantity-display">x${quantity}</span>
-                        </div>
-                        <div class="item-total-price">
-                            <span class="total-currency-symbol">৳</span> ${itemTotal.toFixed(2)}
-                        </div>
-                    </div>
+                  </div>
+                  <div class="summary-item-right">
+                    <span class="summary-qty">x${quantity}</span>
+                    <div class="summary-price"><span class="total-currency-symbol">৳</span> ${itemTotal.toFixed(2)}</div>
+                  </div>
                 </div>
             `;
         }
@@ -642,4 +640,25 @@ function initializeProgressIndicator() {
     
     // Initial check
     updateProgressIndicator();
+}
+
+// Payment method icon toggle
+function initializePaymentMethodIcon() {
+    const select = document.getElementById('payment_method');
+    const icon = document.getElementById('payment-icon');
+    if (!select || !icon) return;
+    
+    const applyIcon = () => {
+        // reset classes
+        icon.classList.remove('fa-money-bill-wave', 'fa-credit-card');
+        if (select.value === 'card') {
+            icon.classList.add('fa-credit-card');
+        } else {
+            icon.classList.add('fa-money-bill-wave');
+        }
+    };
+    
+    // On load and on change
+    applyIcon();
+    select.addEventListener('change', applyIcon);
 }

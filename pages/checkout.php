@@ -67,29 +67,26 @@ include '../components/header.php';
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 col-lg-8">
-                    <div class="progress-indicator d-flex align-items-center justify-content-between flex-column flex-md-row">
+                    <div class="progress-indicator d-flex align-items-center justify-content-between">
                         <div class="step active">
                             <div class="step-circle">
                                 <i class="fas fa-shopping-cart"></i>
                             </div>
-                            <span class="step-label d-none d-md-inline">Cart</span>
-                            <span class="step-label d-md-none">Cart</span>
+                            <span class="step-label">Cart</span>
                         </div>
                         <div class="step-line d-none d-md-block"></div>
                         <div class="step" id="info-step">
                             <div class="step-circle">
                                 <i class="fas fa-info-circle"></i>
                             </div>
-                            <span class="step-label d-none d-md-inline">Information</span>
-                            <span class="step-label d-md-none">Info</span>
+                            <span class="step-label">Information</span>
                         </div>
                         <div class="step-line d-none d-md-block"></div>
                         <div class="step">
                             <div class="step-circle">
                                 <i class="fas fa-credit-card"></i>
                             </div>
-                            <span class="step-label d-none d-md-inline">Payment</span>
-                            <span class="step-label d-md-none">Pay</span>
+                            <span class="step-label">Payment</span>
                         </div>
                     </div>
                 </div>

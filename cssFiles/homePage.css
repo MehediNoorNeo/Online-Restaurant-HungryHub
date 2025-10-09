@@ -806,3 +806,25 @@ a:focus, button:focus, input:focus, label:focus{outline:3px solid rgba(255,107,5
 .toast.bg-danger {
   background-color: #dc3545 !important;
 }
+
+/* Responsive navbar cart/profile visibility */
+/* Desktop: keep original navbar layout */
+@media (min-width: 992px) {
+  .desktop-cart-profile { display: flex !important; }
+  .mobile-cart-profile { display: none !important; }
+}
+
+/* Mobile: move cart/profile to brand row, left of the menu icon */
+@media (max-width: 991.98px) {
+  .desktop-cart-profile { display: none !important; }
+  .mobile-cart-profile {
+    display: flex !important;
+    margin-left: auto; /* push next to hamburger */
+    margin-right: 0.75rem;
+  }
+  .navbar .container-fluid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}

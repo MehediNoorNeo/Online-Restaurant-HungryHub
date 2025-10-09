@@ -53,27 +53,8 @@ require_once '../auth/auth_functions.php';
           <span class="fw-bold">HungryHub</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav mx-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#menu' : 'index.php#menu'; ?>">Menu</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#how-it-works' : 'index.php#how-it-works'; ?>">How it works</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#why' : 'index.php#why'; ?>">Why HungryHub</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#testimonials' : 'index.php#testimonials'; ?>">Reviews</a>
-            </li>
-          </ul>
-          
-          <div class="d-flex gap-2 align-items-center">
+        <!-- Cart + Profile always visible (outside collapse) -->
+        <div class="d-flex gap-2 align-items-center ms-auto me-2 order-lg-3 ms-lg-0">
             <!-- Cart Section -->
             <div class="cart-section me-3">
               <a href="#" class="cart-link text-decoration-none" onclick="event.preventDefault(); showCartModal();">
@@ -103,7 +84,27 @@ require_once '../auth/auth_functions.php';
               <a class="btn btn-outline-primary" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/signin.php' : 'signin.php'; ?>">Sign In</a>
               <a class="btn btn-primary" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/signup.php' : 'signup.php'; ?>">Sign Up</a>
             <?php endif; ?>
-          </div>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#menu' : 'index.php#menu'; ?>">Menu</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#how-it-works' : 'index.php#how-it-works'; ?>">How it works</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#why' : 'index.php#why'; ?>">Why HungryHub</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="<?php echo (basename($_SERVER['PHP_SELF']) == 'checkout.php') ? '../pages/index.php#testimonials' : 'index.php#testimonials'; ?>">Reviews</a>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>

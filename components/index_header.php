@@ -30,27 +30,8 @@ require_once '../auth/auth_functions.php';
           <span class="fw-bold">HungryHub</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav mx-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="#menu">Menu</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#how-it-works">How it works</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#why">Why HungryHub</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="#testimonials">Reviews</a>
-            </li>
-          </ul>
-          
-          <div class="d-flex gap-2 align-items-center">
+        <!-- Cart + Profile: always visible (outside collapse) -->
+        <div class="d-flex gap-2 align-items-center ms-auto me-2 order-lg-3 ms-lg-0">
             <!-- Cart Section -->
             <div class="cart-section me-3">
               <a href="#cart" class="cart-link text-decoration-none">
@@ -80,8 +61,27 @@ require_once '../auth/auth_functions.php';
               <a class="btn btn-outline-primary" href="signin.php">Sign In</a>
               <a class="btn btn-primary" href="signup.php">Sign Up</a>
             <?php endif; ?>
-            
-          </div>
+        </div>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse order-lg-2" id="navbarNav">
+          <ul class="navbar-nav mx-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="#menu">Menu</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#how-it-works">How it works</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#why">Why HungryHub</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#testimonials">Reviews</a>
+            </li>
+          </ul>
         </div>
       </div>
     </nav>
