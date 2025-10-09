@@ -13,6 +13,25 @@ $message_type = '';
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle password change action
+    if (($_POST['action'] ?? '') === 'change_password') {
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+        if (strlen($newPassword) < 6) {
+            $_SESSION['flash_message'] = 'New password must be at least 6 characters';
+            $_SESSION['flash_type'] = 'error';
+        } elseif ($newPassword !== $confirmPassword) {
+            $_SESSION['flash_message'] = 'New password and confirmation do not match';
+            $_SESSION['flash_type'] = 'error';
+        } else {
+            $change = changeUserPassword($user['id'], $currentPassword, $newPassword);
+            $_SESSION['flash_message'] = $change['message'];
+            $_SESSION['flash_type'] = $change['success'] ? 'success' : 'error';
+        }
+        header('Location: profile.php');
+        exit();
+    }
     $name = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
@@ -54,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Get full user profile
 $userProfile = getUserProfile($user['id']);
+$passwordLastChanged = getPasswordLastChanged($user['id']);
 
 // Set page title for header
 $page_title = 'Profile';
@@ -278,40 +298,53 @@ $include_profile_css = true;
                                     <div class="security-item">
                                         <div class="security-info">
                                             <h6>Password</h6>
-                                            <p>Last changed: Never</p>
+                                            <p>Last changed: <?php echo $passwordLastChanged ? date('M d, Y', strtotime($passwordLastChanged)) : 'Never'; ?></p>
                                         </div>
-                                        <button class="btn btn-outline-primary btn-sm">
+                                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                                             <i class="fas fa-key me-2"></i>
                                             Change Password
                                         </button>
                                     </div>
                                     
-                                    <div class="security-item">
-                                        <div class="security-info">
-                                            <h6>Two-Factor Authentication</h6>
-                                            <p>Add an extra layer of security</p>
-                                        </div>
-                                        <button class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-mobile-alt me-2"></i>
-                                            Enable 2FA
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="security-item">
-                                        <div class="security-info">
-                                            <h6>Login Activity</h6>
-                                            <p>View recent login attempts</p>
-                                        </div>
-                                        <button class="btn btn-outline-primary btn-sm">
-                                            <i class="fas fa-history me-2"></i>
-                                            View Activity
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-key me-2"></i>Change Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form method="POST" action="">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" name="current_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="new_password" minlength="6" required>
+                            <div class="form-text">At least 6 characters</div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" name="confirm_password" minlength="6" required>
+                        </div>
+                        <input type="hidden" name="action" value="change_password">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

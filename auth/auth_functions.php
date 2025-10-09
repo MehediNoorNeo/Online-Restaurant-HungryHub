@@ -150,4 +150,55 @@ function getUserProfile($userId) {
         return null;
     }
 }
+
+// Change user password with current password verification
+function changeUserPassword($userId, $currentPassword, $newPassword) {
+    global $pdo;
+    try {
+        ensurePasswordChangedAtColumn();
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ? AND status = 'active'");
+        $stmt->execute([$userId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return ['success' => false, 'message' => 'User not found'];
+        }
+        if (!password_verify($currentPassword, $row['password'])) {
+            return ['success' => false, 'message' => 'Current password is incorrect'];
+        }
+        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+        $upd = $pdo->prepare("UPDATE users SET password = ?, password_changed_at = NOW() WHERE id = ?");
+        $upd->execute([$hashed, $userId]);
+        return ['success' => true, 'message' => 'Password changed successfully'];
+    } catch (PDOException $e) {
+        return ['success' => false, 'message' => 'Password change failed: ' . $e->getMessage()];
+    }
+}
+
+// Ensure users.password_changed_at exists
+function ensurePasswordChangedAtColumn() {
+    global $pdo;
+    try {
+        $check = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'password_changed_at'");
+        $check->execute();
+        $exists = $check->fetchColumn() > 0;
+        if (!$exists) {
+            $pdo->exec("ALTER TABLE users ADD COLUMN password_changed_at DATETIME NULL AFTER password");
+        }
+    } catch (PDOException $e) {
+        // Silently ignore if no permission; feature will gracefully show 'Never'
+    }
+}
+
+function getPasswordLastChanged($userId) {
+    global $pdo;
+    try {
+        ensurePasswordChangedAtColumn();
+        $stmt = $pdo->prepare("SELECT password_changed_at FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $ts = $stmt->fetchColumn();
+        return $ts ?: null;
+    } catch (PDOException $e) {
+        return null;
+    }
+}
 ?>
