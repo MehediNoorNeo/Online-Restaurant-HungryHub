@@ -655,7 +655,7 @@ async function loadFeaturedFoodItems() {
             <div class="mt-auto">
               <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="btn-group" role="group" onclick="event.stopPropagation()">
-                  <button class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity('${itemName}')" id="remove-${itemName.replace(/\s+/g, '-')}">
+                  <button class="btn btn-outline-secondary btn-sm" onclick="removeFromCart('${itemName}')" id="remove-${itemName.replace(/\s+/g, '-')}">
                     <i class="fas fa-minus"></i>
                   </button>
                   <span class="btn btn-light border" id="qty-${itemName.replace(/\s+/g, '-')}">0</span>

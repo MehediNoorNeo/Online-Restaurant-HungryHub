@@ -153,7 +153,7 @@ include '../components/index_header.php';
 
       try {
         // Fetch random food items from API
-        const response = await fetch('../api/food-items-simple.php?random=true&limit=12');
+        const response = await fetch('../api/food-items-random.php?random=true&limit=12');
         const data = await response.json();
 
         if (!data.success) {
@@ -184,7 +184,7 @@ include '../components/index_header.php';
         // Generate food cards
         foodItems.forEach((foodItem, index) => {
           const itemName = foodItem.name;
-          const imagePath = `../${foodItem.image}`;
+          const imagePath = `../${foodItem.imagePath}`;
 
           // Get review data for this food item
           const reviews = reviewData[foodItem.id] || {

@@ -19,6 +19,7 @@ require_once '../auth/auth_functions.php';
 
   <link rel="stylesheet" href="../cssFiles/homePage.css?v=<?php echo time(); ?>">
   <link rel="stylesheet" href="../cssFiles/cart_modal.css?v=<?php echo time(); ?>">
+  <link rel="stylesheet" href="../cssFiles/foodCards.css?v=<?php echo time(); ?>">
 </head>
 <body>
   <!-- Navbar -->
