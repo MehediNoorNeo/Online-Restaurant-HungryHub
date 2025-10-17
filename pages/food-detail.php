@@ -32,6 +32,38 @@ if (!$food_item) {
     exit();
 }
 
+// Function to check if the logged-in user has ordered this food item
+function hasUserOrderedFood(PDO $pdo, int $user_id, string $food_name): bool {
+    if ($user_id <= 0) return false;
+    try {
+        // Consider any non-cancelled order as a valid purchase intent
+        $stmt = $pdo->prepare("SELECT order_items FROM orders WHERE user_id = ? AND status IN ('pending','processing','completed')");
+        $stmt->execute([$user_id]);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($orders as $order) {
+            $items = json_decode($order['order_items'] ?? '[]', true);
+            if (is_array($items)) {
+                foreach ($items as $it) {
+                    if (isset($it['item_name']) && $it['item_name'] === $food_name) {
+                        return true;
+                    }
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        // fail closed (no review) on error
+        return false;
+    }
+    return false;
+}
+
+// Precompute whether current user has ordered this item (used to gate form)
+$user_has_ordered = false;
+if (isLoggedIn()) {
+    $current_user = getCurrentUser();
+    $user_has_ordered = hasUserOrderedFood($pdo, (int)$current_user['id'], (string)$food_item['name']);
+}
+
 // Get reviews for this food item
 $stmt = $pdo->prepare("
     SELECT r.*, u.name as user_name 
@@ -59,8 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
         $rating = (int)($_POST['rating'] ?? 0);
         $review_text = trim($_POST['review_text'] ?? '');
         $user_id = getCurrentUser()['id'];
-        
-        if ($rating >= 1 && $rating <= 5 && !empty($review_text)) {
+
+        // Gate by orders table: only allow users who ordered this item to submit/update a review
+        if (!$user_has_ordered) {
+            $message = 'You can only review items you have ordered. Please place an order for this item first.';
+            $message_type = 'warning';
+        } elseif ($rating >= 1 && $rating <= 5 && !empty($review_text)) {
             try {
                 // Check if user already reviewed this item
                 $stmt = $pdo->prepare("SELECT id FROM reviews WHERE food_id = ? AND user_id = ?");
@@ -175,6 +211,7 @@ $include_food_detail_css = true;
                     <h3 class="mb-4">Reviews & Ratings</h3>
                     
                     <?php if (isLoggedIn()): ?>
+                    <?php if ($user_has_ordered): ?>
                     <div class="review-form">
                         <h5>Write a Review</h5>
                         <form method="POST">
@@ -196,13 +233,27 @@ $include_food_detail_css = true;
                         </form>
                     </div>
                     <?php else: ?>
+                    <div class="alert alert-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-shopping-cart me-3 fa-2x text-warning"></i>
+                            <div>
+                                <h6 class="mb-1">Order Required to Review</h6>
+                                <p class="mb-2">You can only review items you have ordered. Add this item to your cart and place an order to leave a review.</p>
+                                <a href="index.php" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-utensils me-1"></i>Browse Menu
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    <?php else: ?>
                     <div class="alert alert-info">
                         <a href="signin.php" class="alert-link">Sign in</a> to write a review.
                     </div>
                     <?php endif; ?>
                     
                     <?php if ($message): ?>
-                    <div class="alert alert-<?php echo $message_type === 'success' ? 'success' : 'danger'; ?>">
+                    <div class="alert alert-<?php echo $message_type === 'success' ? 'success' : ($message_type === 'warning' ? 'warning' : 'danger'); ?>">
                         <?php echo htmlspecialchars($message); ?>
                     </div>
                     <?php endif; ?>
