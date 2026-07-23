@@ -4,11 +4,7 @@ $page_title = 'HungryHub - Your Cravings, Delivered';
 $page_description = 'Explore a world of flavors, including salads, rolls, and pure vegetarian options — get your favorite food delivered fast.';
 $page_keywords = 'food delivery, online ordering, restaurant, hungryhub, salads, rolls, desserts, pasta, noodles';
 
-// Database configuration
-$host = 'localhost';
-$dbname = 'hungry_hub';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../config/database.php';
 
 // Get dynamic content from database
 $featured_categories = [];
@@ -18,7 +14,7 @@ $total_categories = 0;
 $latest_reviews = [];
 
 try {
-  $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+  $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $username, $password);
   $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
   // Get featured categories (top 3 categories with most items)

@@ -1,18 +1,14 @@
 <?php
 session_start();
 
-// Database configuration
-$host = 'localhost';
-$dbname = 'hungry_hub';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../config/database.php';
 
 // Get user data if logged in
 $user = null;
 $userProfile = null;
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Check if user is logged in

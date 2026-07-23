@@ -1,14 +1,10 @@
 <?php
 header('Content-Type: application/json');
 
-// Database configuration
-$host = 'localhost';
-$dbname = 'hungry_hub';
-$username = 'root';
-$password = '';
+require_once __DIR__ . '/../config/database.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch(PDOException $e) {
     echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
