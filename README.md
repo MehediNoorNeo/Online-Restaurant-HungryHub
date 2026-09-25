@@ -5,8 +5,16 @@
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5-7952B3?style=for-the-badge&logo=bootstrap)
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?style=for-the-badge&logo=javascript)
 ![License](https://img.shields.io/badge/Status-Academic%20Project-success?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20Website-success?style=for-the-badge&logo=googlechrome)](https://hungryhub.site.je/pages/index.php)
 
 A full-stack **Online Restaurant Management System** developed using **PHP, MySQL, HTML, CSS, Bootstrap, and JavaScript**. HungryHub allows customers to browse menus, place food orders, manage their carts, and leave reviews, while providing administrators with a powerful dashboard to manage food items, orders, customers, delivery areas, and coupons.
+
+---
+
+## 🌐 Live Demo
+
+Explore the live application directly in your browser:  
+👉 **[https://hungryhub.site.je](https://hungryhub.site.je/pages/index.php)**
 
 ---
 
@@ -147,6 +155,13 @@ $database = "hungryhub";
 ---
 
 ## Run the Project
+
+### 🌐 Live Hosted Version
+
+Access the live application directly without any setup:  
+👉 **[https://hungryhub.site.je](https://hungryhub.site.je/pages/index.php)**
+
+### 💻 Local Development Setup
 
 Open your browser:
 
